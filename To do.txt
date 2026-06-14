@@ -1,0 +1,12 @@
+[] Creer dossier Spring0
+[] Structurer le projet
+    []- Classe FrontController.java
+        []-doGet/Post : qui fait n'importe on fait dans le navigateur renvoie 
+        dans la page
+        []-fonction handle() : fonction qui retourne une println ("html")
+        -----> la page qu'on va retourner sera dans la fonction **handle**
+    []-lib
+        []-On aura un servlet-api.jar pour pouvoir contenir les api et les bibliothèque
+
+    []-out
+        []-Compile+FrontController.class
