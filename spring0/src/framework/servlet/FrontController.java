@@ -1,4 +1,4 @@
-package servlet;
+package framework.servlet;
 
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,8 +9,9 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
-import annotation.Controller;
-import util.Utils;
+
+import framework.annotation.Controller;
+import framework.util.Utils;
 
 //@WebServlet("/*")
 

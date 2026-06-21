@@ -1,6 +1,6 @@
 package controller;
 
-import annotation.Controller;
+import framework.annotation.Controller;
 
 @Controller
 public class TestController1 {

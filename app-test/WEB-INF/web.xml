@@ -6,7 +6,7 @@
 
     <servlet>
         <servlet-name>FrontController</servlet-name>
-        <servlet-class>servlet.FrontController</servlet-class>
+        <servlet-class>framework.servlet.FrontController</servlet-class>
 
         <init-param>
             <param-name>base-package</param-name>
