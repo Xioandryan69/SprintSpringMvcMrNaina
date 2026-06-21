@@ -10,7 +10,7 @@
 
         <init-param>
             <param-name>base-package</param-name>
-            <param-value>controller</param-value>
+            <param-value>controller,controller1</param-value>
         </init-param>
 
     </servlet>

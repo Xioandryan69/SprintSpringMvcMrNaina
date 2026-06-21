@@ -2,9 +2,9 @@ package util;
 
 import java.io.File;
 import java.lang.annotation.Annotation;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.net.URL;
 
 public class Utils {
 
@@ -36,10 +36,6 @@ public class Utils {
         }
         File packageDir = new File(resource.toURI());
         File[] files = packageDir.listFiles();
-
-        if (files == null) {
-            return classes;
-        }
 
         for (File file : files) {
             if (file.isFile() && file.getName().endsWith(".class")) {

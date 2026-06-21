@@ -4,7 +4,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
+//import jakarta.servlet.annotation.WebServlet;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -12,7 +12,7 @@ import java.util.List;
 import annotation.Controller;
 import util.Utils;
 
-@WebServlet("/*")
+//@WebServlet("/*")
 
 public class FrontController extends HttpServlet {
 
