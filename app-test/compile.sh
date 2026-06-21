@@ -2,6 +2,8 @@
 TOMCAT_SOURCE="/home/andrianandrainy/Documents/S4/Mr Aina & Mr Rindra/tomcat2"
 # creer le dossier out 
 # compiler les classes java
+rm -rf WEB-INF/classes/*
+mkdir -p WEB-INF/classes
 javac -cp "lib/*:WEB-INF/lib/*" -d WEB-INF/classes $(find . -name "*.java")
 
 # Deployer vers tomcat # stop tomcat

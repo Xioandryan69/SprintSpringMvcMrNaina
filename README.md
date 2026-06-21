@@ -7,3 +7,13 @@ git add .
 git commit -m "Initial commit"
 git checkout -b SpringMvc
 ```
+
+    2. D' abord 
+``` bash 
+# aller dans spring0 puis compile.sh
+#executer ./compile.sh
+# aller dans app-tesst puis compile.sh 
+#executer ./compile.sh
+
+
+```
