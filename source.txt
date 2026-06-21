@@ -1,31 +1,31 @@
 ==================================================
 EXPORT COMPLET DU PROJET
-Date : dim. 21 juin 2026 17:37:48 EAT
+Date : dim. 21 juin 2026 17:57:15 EAT
 Répertoire : /home/andrianandrainy/Documents/S4/Mr Aina & Mr Rindra/SprintSpringMvcMrNaina
 ==================================================
 
 
 ==================================================
-FICHIER : ./app-test/src/controller1/TestController.java
+FICHIER : ./app-test/src/controller1/TestController4.java
 ==================================================
 package controller1;
 
 import framework.annotation.Controller;
 
 @Controller
-public class TestController {
+public class TestController4 {
 
 }
 
 ==================================================
-FICHIER : ./app-test/src/controller/TestController1.java
+FICHIER : ./app-test/src/controller/TestController3.java
 ==================================================
 package controller;
 
 import framework.annotation.Controller;
 
 @Controller
-public class TestController1 {
+public class TestController3 {
 
 }
 
@@ -52,7 +52,7 @@ FICHIER : ./app-test/WEB-INF/web.xml
 
     <servlet>
         <servlet-name>FrontController</servlet-name>
-        <servlet-class>servlet.FrontController</servlet-class>
+        <servlet-class>framework.servlet.FrontController</servlet-class>
 
         <init-param>
             <param-name>base-package</param-name>
@@ -71,6 +71,11 @@ FICHIER : ./app-test/WEB-INF/web.xml
 
 ==================================================
 FICHIER : ./.git
+==================================================
+
+
+==================================================
+FICHIER : ./source.txt
 ==================================================
 
 
@@ -231,3 +236,19 @@ public class Utils {
     }
 }
 
+
+==================================================
+FICHIER : ./To do.txt
+==================================================
+[] Creer dossier Spring0
+[] Structurer le projet
+    []- Classe FrontController.java
+        []-doGet/Post : qui fait n'importe on fait dans le navigateur renvoie 
+        dans la page
+        []-fonction handle() : fonction qui retourne une println ("html")
+        -----> la page qu'on va retourner sera dans la fonction **handle**
+    []-lib
+        []-On aura un servlet-api.jar pour pouvoir contenir les api et les bibliothèque
+
+    []-out
+        []-Compile+FrontController.class
