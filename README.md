@@ -14,6 +14,4 @@ git checkout -b SpringMvc
 #executer ./compile.sh
 # aller dans app-tesst puis compile.sh 
 #executer ./compile.sh
-
-
 ```
