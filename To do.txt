@@ -18,3 +18,14 @@
 
     + [x] sprint 2 :
         creer annotation Method et afficher method 
+
+
+    + [] normallement si je fait test :
+
+        meme methodes mais dans des classes
+
+
+    + [ ] sprint3 :
+
+
+    + [ ] sprint3 ibis :
