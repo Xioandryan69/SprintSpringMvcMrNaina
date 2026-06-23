@@ -24,9 +24,9 @@ rm -rf $TOMCAT_SOURCE/webapps/app-test
 
 
 # redémarre
-"$TOMCAT_SOURCE/bin/startup.sh"
 
 cp -r ../app-test "$TOMCAT_SOURCE/webapps/"
+"$TOMCAT_SOURCE/bin/startup.sh"
 
 
 echo "http://localhost:8080/app-test/"

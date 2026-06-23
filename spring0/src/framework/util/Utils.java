@@ -1,9 +1,12 @@
 package framework.util;
 
+import framework.annotation.Get;
 import java.io.File;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class Utils {
@@ -20,6 +23,35 @@ public class Utils {
             }
         }
 
+        return output;
+    }
+
+
+    // correction Mr Naina 
+        public static List<Class<?>> findClassesByAnnotation(Class<? extends Annotation> annotation, HashMap<String, Mapping> urlMapping,String... basePackages)
+            throws Exception {
+        List<Class<?>> output = new ArrayList<>();
+        for (String basePackage : basePackages) {
+            List<Class<?>> classes = findClasses(basePackage);
+            for (Class<?> clazz : classes) {
+                if (clazz.getAnnotation(annotation) != null && !output.contains(clazz)) {
+                    output.add(clazz);
+                }
+
+                
+                Method[] methods = clazz.getDeclaredMethods();
+                for (Method method : methods) {
+                    if (method.isAnnotationPresent(Get.class)) {
+                        Get getAnnotation = method.getAnnotation(Get.class);
+                        String url = getAnnotation.value();
+
+                        Mapping mapping = new Mapping(clazz.getName(), method.getName());
+
+                        urlMapping.put(url, mapping);
+                    }
+                }
+            }
+        }
         return output;
     }
 

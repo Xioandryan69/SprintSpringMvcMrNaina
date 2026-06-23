@@ -29,22 +29,8 @@ public class FrontController extends HttpServlet {
     public void init() throws ServletException {
         String basePackages = this.getInitParameter("base-package");
         try {
-            controllers = Utils.findClassesByAnnotation(Controller.class,
-                    basePackages.split(","));
-
-            for (Class<?> controllerClass : controllers) {
-                Method[] methods = controllerClass.getDeclaredMethods();
-                for (Method method : methods) {
-                    if (method.isAnnotationPresent(Get.class)) {
-                        Get getAnnotation = method.getAnnotation(Get.class);
-                        String url = getAnnotation.value();
-
-                        Mapping mapping = new Mapping(controllerClass.getName(), method.getName());
-
-                        urlMapping.put(url, mapping);
-                    }
-                }
-            }
+           // controllers = Utils.findClassesByAnnotation(Controller.class, basePackages.split(","));
+            controllers = Utils.findClassesByAnnotation(Controller.class,urlMapping,basePackages.split(","));
 
         } catch (Exception e) {
             throw new ServletException(e);
@@ -96,11 +82,8 @@ public class FrontController extends HttpServlet {
         // Sprint 2
 
 
-        out.println("<!DOCTYPE html>");
-        out.println("<html>");
-        out.println("<head><title>Spring0 - Étape Méthodes</title></head>");
-        out.println("<body>");
-        out.println("<h1>Scan des méthodes terminé !</h1>");
+
+        out.println("<h2>Scan des méthodes terminé !</h2>");
         out.println("<p>URL demandée : <strong>" + pathInfo + "</strong></p>");
 
         // Vérification si l'URL existe dans notre urlMapping
