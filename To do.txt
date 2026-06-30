@@ -26,6 +26,11 @@
 
 
     + [ ] sprint3 :
+        + [ ] instancier le controlleurs trouvér
+        + [ ] excecuter methode
+        + [ ] recuperer ce qu elle renvoie
 
 
     + [ ] sprint3 ibis :
+        + [ ] deux methodes ont le meme url 
+        + [ ] exception si la méthode n ' existe pas 
