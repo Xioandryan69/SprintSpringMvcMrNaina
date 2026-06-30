@@ -24,7 +24,7 @@ import java.util.HashMap;
 public class FrontController extends HttpServlet {
 
     private List<Class<?>> controllers = new ArrayList<>();
-    private HashMap<String, Mapping> urlMapping = new HashMap<>();
+    //private HashMap<String, Mapping> urlMapping = new HashMap<>();
     private HashMap<UrlMethod, Mapping> urlMappingmethod = new HashMap<>();
 
     @Override

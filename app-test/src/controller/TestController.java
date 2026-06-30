@@ -18,7 +18,7 @@ public class TestController {
     @Get("/andrana1")
     public void andrana() {
     }
-    @UrlMapping("/andrana1","POST")
+    @UrlMapping(value= "/andrana1",method ="POST")
     public void andrana3() {
     }
 

@@ -93,24 +93,36 @@ public class Utils {
 
                 Method[] methods = clazz.getDeclaredMethods();
                 for (Method method : methods) {
+
+                    String url = null;
+                    String httpMethod = "GET";
+                    boolean hashMapping = false;
+
                     if (method.isAnnotationPresent(Get.class)) {
                         Get getAnnotation = method.getAnnotation(Get.class);
-                        String url = getAnnotation.value();
+                        url = getAnnotation.value();
+                        httpMethod = "GET";
+                        hashMapping = true;
 
-                        // creer Url Methodes
-                        UrlMethod urlKey = new UrlMethod(url, "GET");
-                        // Detections doublon s Url
+                    } else if (method.isAnnotationPresent(framework.annotation.UrlMapping.class)) {
+                        framework.annotation.UrlMapping urlAnnotation = method
+                                .getAnnotation(framework.annotation.UrlMapping.class);
+                        url = urlAnnotation.value();
+                        httpMethod = urlAnnotation.method().toUpperCase();
+                        hashMapping = true;
+                    }
+                    if (hashMapping) {
+                        UrlMethod urlKey = new UrlMethod(url, httpMethod);
                         if (urlMapping.containsKey(urlKey)) {
                             Mapping duplicate = urlMapping.get(urlKey);
                             throw new Exception("Erreur de mapping d'URL en double détectée : L'URL '" + url
-                                    + "' (GET) est déjà associée à " + duplicate.getClassName() + "."
+                                    + "' (" + httpMethod + ") est déjà associée à " + duplicate.getClassName() + "."
                                     + duplicate.getMethod()
                                     + "(). Impossible de la lier également à " + clazz.getName() + "."
                                     + method.getName() + "().");
                         }
 
                         Mapping mapping = new Mapping(clazz.getName(), method.getName());
-
                         urlMapping.put(urlKey, mapping);
                     }
                 }
