@@ -50,7 +50,7 @@ public class UrlMethod {
 
     @Override
     public String toString() {
-        return "[" + method + "] " + url + "[url: " + url + "]";
+        return "[method : " + method + "] " + url + "[url: " + url + "]";
     }
 
 }
