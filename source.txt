@@ -1,6 +1,6 @@
 ==================================================
 EXPORT COMPLET DU PROJET
-Date : mar. 30 juin 2026 10:50:54 EAT
+Date : mar. 30 juin 2026 14:15:39 EAT
 Répertoire : /home/andrianandrainy/Documents/S4/Mr Aina & Mr Rindra/SprintSpringMvcMrNaina
 ==================================================
 
@@ -71,7 +71,7 @@ public class TestController {
     @Get("/andrana1")
     public void andrana() {
     }
-    @UrlMapping("/andrana1","POST")
+    @UrlMapping(value= "/andrana1",method ="POST")
     public void andrana3() {
     }
 
@@ -200,7 +200,7 @@ import java.util.HashMap;
 public class FrontController extends HttpServlet {
 
     private List<Class<?>> controllers = new ArrayList<>();
-    private HashMap<String, Mapping> urlMapping = new HashMap<>();
+    //private HashMap<String, Mapping> urlMapping = new HashMap<>();
     private HashMap<UrlMethod, Mapping> urlMappingmethod = new HashMap<>();
 
     @Override
@@ -274,22 +274,13 @@ public class FrontController extends HttpServlet {
          * if (urlMapping.containsKey(pathInfo)) {
          * Mapping m = urlMapping.get(pathInfo);
          * 
-         * try {
-         * Class<?> clazz=Class.forName(m.getClassName());
-         * Object controlleurInstance = clazz.getDeclaredConstructor().newInstance();
-         * Method method=clazz.getDeclaredMethod(m.getMethod());
-         * method.invoke(controlleurInstance);
-         * 
+
          * out.println("<p style='color: green;'><strong>Match trouvé !</strong></p>");
          * out.println("<ul>");
          * out.println("<li>Contrôleur : " + m.getClassName() + "</li>");
          * out.println("<li>Méthode associée : " + m.getMethod() + "()</li>");
          * out.println("</ul>");
-         * } catch (Exception e) {
-         * out.println("<p style='color: red;'>Erreur lors de l'exécution : " +
-         * e.getMessage() + "</p>");
-         * e.printStackTrace(out); //
-         * }
+
          * } else {
          * out.
          * println("<p style='color: red;'>Aucune méthode associée à cette URL dans la HashMap.</p>"
@@ -446,7 +437,7 @@ public class UrlMethod {
 
     @Override
     public String toString() {
-        return "[" + method + "] " + url + "[url: " + url + "]";
+        return "[method : " + method + "] " + url + "[url: " + url + "]";
     }
 
 }
@@ -550,24 +541,36 @@ public class Utils {
 
                 Method[] methods = clazz.getDeclaredMethods();
                 for (Method method : methods) {
+
+                    String url = null;
+                    String httpMethod = "GET";
+                    boolean hashMapping = false;
+
                     if (method.isAnnotationPresent(Get.class)) {
                         Get getAnnotation = method.getAnnotation(Get.class);
-                        String url = getAnnotation.value();
+                        url = getAnnotation.value();
+                        httpMethod = "GET";
+                        hashMapping = true;
 
-                        // creer Url Methodes
-                        UrlMethod urlKey = new UrlMethod(url, "GET");
-                        // Detections doublon s Url
+                    } else if (method.isAnnotationPresent(framework.annotation.UrlMapping.class)) {
+                        framework.annotation.UrlMapping urlAnnotation = method
+                                .getAnnotation(framework.annotation.UrlMapping.class);
+                        url = urlAnnotation.value();
+                        httpMethod = urlAnnotation.method().toUpperCase();
+                        hashMapping = true;
+                    }
+                    if (hashMapping) {
+                        UrlMethod urlKey = new UrlMethod(url, httpMethod);
                         if (urlMapping.containsKey(urlKey)) {
                             Mapping duplicate = urlMapping.get(urlKey);
                             throw new Exception("Erreur de mapping d'URL en double détectée : L'URL '" + url
-                                    + "' (GET) est déjà associée à " + duplicate.getClassName() + "."
+                                    + "' (" + httpMethod + ") est déjà associée à " + duplicate.getClassName() + "."
                                     + duplicate.getMethod()
                                     + "(). Impossible de la lier également à " + clazz.getName() + "."
                                     + method.getName() + "().");
                         }
 
                         Mapping mapping = new Mapping(clazz.getName(), method.getName());
-
                         urlMapping.put(urlKey, mapping);
                     }
                 }

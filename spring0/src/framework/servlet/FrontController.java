@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletContext;
 //import jakarta.servlet.annotation.WebServlet;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -24,19 +25,20 @@ import java.util.HashMap;
 public class FrontController extends HttpServlet {
 
     private List<Class<?>> controllers = new ArrayList<>();
-    //private HashMap<String, Mapping> urlMapping = new HashMap<>();
+    // private HashMap<String, Mapping> urlMapping = new HashMap<>();
     private HashMap<UrlMethod, Mapping> urlMappingmethod = new HashMap<>();
 
     @Override
     public void init() throws ServletException {
-        String basePackages = this.getInitParameter("base-package");
+        // String basePackages = this.getInitParameter("base-package");
+        ServletContext context = getServletContext();
         try {
-            // controllers = Utils.findClassesByAnnotation(Controller.class,
+            // controllers = Utils.findClassesMethodByAnnotation(Controller.class,
+            // urlMappingmethod,
             // basePackages.split(","));
-            // controllers =
-            // Utils.findClassesByAnnotation(Controller.class,urlMapping,basePackages.split(","));
-            controllers = Utils.findClassesMethodByAnnotation(Controller.class, urlMappingmethod,
-                    basePackages.split(","));
+
+            urlMappingmethod = (HashMap<UrlMethod, Mapping>)context.getAttribute("urlMapping");
+            controllers = (List<Class<?>>)context.getAttribute("controllers");
 
         } catch (Exception e) {
             throw new ServletException(e);
@@ -60,13 +62,14 @@ public class FrontController extends HttpServlet {
 
     private void handle(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
+
         response.setContentType("text/html; charset=UTF-8");
 
         PrintWriter out = response.getWriter();
         // Récupérer le chemin tapé (Ex: /SprintSpringMvcMrNaina/employe-list -> on
         // extrait juste la fin)
         String pathInfo = request.getRequestURI().substring(request.getContextPath().length());
-  String httpMethod = request.getMethod();      
+        String httpMethod = request.getMethod();
         UrlMethod requestKey = new UrlMethod(pathInfo, httpMethod);
 
         out.println("<!DOCTYPE html>");
@@ -98,22 +101,13 @@ public class FrontController extends HttpServlet {
          * if (urlMapping.containsKey(pathInfo)) {
          * Mapping m = urlMapping.get(pathInfo);
          * 
-         * try {
-         * Class<?> clazz=Class.forName(m.getClassName());
-         * Object controlleurInstance = clazz.getDeclaredConstructor().newInstance();
-         * Method method=clazz.getDeclaredMethod(m.getMethod());
-         * method.invoke(controlleurInstance);
          * 
          * out.println("<p style='color: green;'><strong>Match trouvé !</strong></p>");
          * out.println("<ul>");
          * out.println("<li>Contrôleur : " + m.getClassName() + "</li>");
          * out.println("<li>Méthode associée : " + m.getMethod() + "()</li>");
          * out.println("</ul>");
-         * } catch (Exception e) {
-         * out.println("<p style='color: red;'>Erreur lors de l'exécution : " +
-         * e.getMessage() + "</p>");
-         * e.printStackTrace(out); //
-         * }
+         * 
          * } else {
          * out.
          * println("<p style='color: red;'>Aucune méthode associée à cette URL dans la HashMap.</p>"
