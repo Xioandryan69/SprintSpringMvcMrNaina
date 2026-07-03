@@ -658,3 +658,16 @@ FICHIER : ./To do.txt
         + [ ] exception si la méthode n ' existe pas 
     + [ ] sprint 4 
         + [ ]  utiliser listener au lieu de init 
+
+
+    + [ ] sprint 5:
+        + [ ] Modifier vue ::
+            + [ ] setUrl 
+            + [ ]setMethod 
+        + [ ] Map 
+            Vieew 
+        
+        +  [ ]cote front 
+            + [ ] suffixe :WEB-INF/views/
+            + [ ] prefixe 
+            + [ ] terminaisom : *.jsp
