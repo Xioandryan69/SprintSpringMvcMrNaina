@@ -664,7 +664,7 @@ FICHIER : ./To do.txt
         + [ ] Modifier vue ::
             + [ ] setUrl 
             + [ ]setMethod 
-        + [ ] Map 
+        + [ ] Map value
             Vieew 
         
         +  [ ]cote front 

@@ -20,16 +20,16 @@ public class AppContextListener implements ServletContextListener {
         ServletContext servletContext = sce.getServletContext();
         String basePackages = servletContext.getInitParameter("base-package");
 
-        HashMap<UrlMethod, Mapping> urlMappingmethod = new HashMap<>();
+        HashMap<UrlMethod, Mapping> urlMappingMethod = new HashMap<>();
 
         try {
             if (basePackages != null) {
                 List<Class<?>> controllers = Utils.findClassesMethodByAnnotation(
                         Controller.class,
-                        urlMappingmethod,
+                        urlMappingMethod,
                         basePackages.split(","));
 
-                servletContext.setAttribute("urlMapping", urlMappingmethod);
+                servletContext.setAttribute("urlMappingMethod", urlMappingMethod);
                 servletContext.setAttribute("controllers", controllers);
 
                 System.out.println("[Framework] Scan des contrôleurs réussi au démarrage !");
