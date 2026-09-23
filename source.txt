@@ -1,0 +1,1401 @@
+==================================================
+EXPORT COMPLET DU PROJET
+Date : mar. 07 juil. 2026 09:35:44 EAT
+Répertoire : /home/andrianandrainy/Documents/S4/Mr Aina & Mr Rindra/SprintSpringMvcMrNaina
+==================================================
+
+
+==================================================
+FICHIER : ./app-test/src/controller1/TestController4.java
+==================================================
+package controller1;
+
+import framework.annotation.Controller;
+import framework.annotation.Get;
+
+@Controller
+public class TestController4 {
+
+    @Get("/welcome")
+    public void hello() {
+    }
+
+}
+
+==================================================
+FICHIER : ./app-test/src/controller/Andrana.java
+==================================================
+package controller;
+
+import framework.annotation.Controller;
+import framework.annotation.Get;
+import framework.annotation.UrlMapping;
+@Controller
+public class Andrana {
+    @Get("/andrana")
+    public void andrana() {
+    }
+
+}
+
+==================================================
+FICHIER : ./app-test/src/controller/TestController3.java
+==================================================
+package controller;
+
+import framework.annotation.Controller;
+
+@Controller
+public class TestController3 {
+
+}
+
+==================================================
+FICHIER : ./app-test/src/controller/TestController.java
+==================================================
+package controller;
+
+import framework.annotation.Controller;
+import framework.annotation.Get;
+import framework.annotation.UrlMapping;
+import framework.util.ModelView;
+
+@Controller
+public class TestController {
+    @Get("/employe-list")
+    public ModelView listEmploye() {
+        ModelView mv = new ModelView("employe-list.jsp");
+        
+        // Ajout de données de test à transmettre à la JSP
+        mv.addItem("titre", "Liste des Employés");
+        mv.addItem("message", "Bienvenue sur la page de gestion des employés !");
+        
+        return mv;
+    }
+
+    @Get("/employe-add")
+    public void addEmploye() {
+    }
+
+    @Get("/andrana1")
+    public void andrana() {
+    }
+    @UrlMapping(value= "/andrana1",method ="POST")
+    public void andrana3() {
+    }
+
+}
+
+==================================================
+FICHIER : ./app-test/WEB-INF/views/employe-list.jsp
+==================================================
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sprint 5 - Vue</title>
+</head>
+<body>
+    <h1>${titre}</h1>
+    <p>${message}</p>
+    
+    <hr>
+    <p style="color: gray; font-size: 0.8em;">Rendu généré via WEB-INF/views/</p>
+</body>
+</html>
+
+==================================================
+FICHIER : ./app-test/WEB-INF/web.xml
+==================================================
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_5_0.xsd"
+    version="5.0">
+
+    <context-param>
+        <param-name>base-package</param-name>
+        <param-value>controller,controller1</param-value>
+    </context-param>
+
+    <servlet>
+        <servlet-name>FrontController</servlet-name>
+        <servlet-class>framework.servlet.FrontController</servlet-class>
+
+        <!-- <init-param>
+            <param-name>base-package</param-name>
+            <param-value>controller,controller1</param-value>
+        </init-param> -->
+
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>FrontController</servlet-name>
+        <url-pattern>/*</url-pattern>
+    </servlet-mapping>
+
+
+</web-app>
+
+==================================================
+FICHIER : ./.git
+==================================================
+
+
+==================================================
+FICHIER : ./source.txt
+==================================================
+
+
+==================================================
+FICHIER : ./spring0/out
+==================================================
+
+
+==================================================
+FICHIER : ./spring0/src/framework/annotation/Controller.java
+==================================================
+package framework.annotation;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Controller
+{
+}
+
+==================================================
+FICHIER : ./spring0/src/framework/annotation/Get.java
+==================================================
+package framework.annotation;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Get {
+    String value();
+}
+
+
+==================================================
+FICHIER : ./spring0/src/framework/annotation/UrlMapping.java
+==================================================
+package framework.annotation;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface UrlMapping {
+    String value();
+    String method() default  "GET";
+}
+
+
+==================================================
+FICHIER : ./spring0/src/framework/listener/AppContextListener.java
+==================================================
+package framework.listener;
+
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletContextEvent;
+import jakarta.servlet.ServletContextListener;
+import jakarta.servlet.annotation.WebListener;
+import java.util.HashMap;
+import java.util.List;
+
+import framework.annotation.Controller;
+import framework.util.Mapping;
+import framework.util.UrlMethod;
+import framework.util.Utils;
+
+@WebListener
+public class AppContextListener implements ServletContextListener {
+
+    @Override
+    public void contextInitialized(ServletContextEvent sce) {
+        ServletContext servletContext = sce.getServletContext();
+        String basePackages = servletContext.getInitParameter("base-package");
+
+        HashMap<UrlMethod, Mapping> urlMappingMethod = new HashMap<>();
+
+        try {
+            if (basePackages != null) {
+                List<Class<?>> controllers = Utils.findClassesMethodByAnnotation(
+                        Controller.class,
+                        urlMappingMethod,
+                        basePackages.split(","));
+
+                servletContext.setAttribute("urlMappingMethod", urlMappingMethod);
+                servletContext.setAttribute("controllers", controllers);
+
+                System.out.println("[Framework] Scan des contrôleurs réussi au démarrage !");
+            }
+        } catch (Exception e) {
+            System.err.println("[Framework] Erreur lors du scan au démarrage : " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void contextDestroyed(ServletContextEvent sce) {
+        // Rien à nettoyer de particulier ici
+    }
+}
+
+==================================================
+FICHIER : ./spring0/src/framework/servlet/FrontController.java
+==================================================
+package framework.servlet;
+
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletContext;
+//import jakarta.servlet.annotation.WebServlet;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import framework.annotation.Controller;
+import framework.annotation.Get;
+import framework.util.Mapping;
+import framework.util.Utils;
+import framework.util.UrlMethod;
+import java.util.HashMap;
+
+import framework.util.ModelView;
+import jakarta.servlet.RequestDispatcher;
+
+//@WebServlet("/*")
+
+public class FrontController extends HttpServlet {
+
+    private List<Class<?>> controllers = new ArrayList<>();
+    // private HashMap<String, Mapping> urlMapping = new HashMap<>();
+    private HashMap<UrlMethod, Mapping> urlMappingmethod = new HashMap<>();
+
+    @Override
+    public void init() throws ServletException {
+        // String basePackages = this.getInitParameter("base-package");
+        ServletContext context = getServletContext();
+        try {
+            // controllers = Utils.findClassesMethodByAnnotation(Controller.class,
+            // urlMappingmethod,
+            // basePackages.split(","));
+
+            urlMappingmethod = (HashMap<UrlMethod, Mapping>) context.getAttribute("urlMappingMethod");
+            controllers = (List<Class<?>>) context.getAttribute("controllers");
+
+        } catch (Exception e) {
+            throw new ServletException(e);
+        }
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+
+        handle(request, response);
+    }
+
+    @Override
+
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+
+        handle(request, response);
+    }
+
+    private void handle(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+
+        response.setContentType("text/html; charset=UTF-8");
+
+        PrintWriter out = response.getWriter();
+        // Récupérer le chemin tapé (Ex: /SprintSpringMvcMrNaina/employe-list -> on
+        // extrait juste la fin)
+        String pathInfo = request.getRequestURI().substring(request.getContextPath().length());
+        String httpMethod = request.getMethod();
+        UrlMethod requestKey = new UrlMethod(pathInfo, httpMethod);
+
+        out.println("<!DOCTYPE html>");
+        out.println("<html>");
+        out.println("<head><title>spring0</title></head>");
+        out.println("<body>");
+        out.println("<h1>Bonjour depuis spring0 & 1 !</h1>");
+        out.println("<p>Methodes !: <strong>" + request.getMethod() + "</strong></p>");
+        out.println("<p> Path !: <strong>" + request.getServletPath() + "</strong></p>");
+        out.println("<h2>Contrôleurs détectés</h2>");
+        out.println("<ul>");
+
+        for (Class<?> controller : controllers) {
+            out.println("<li>" + controller.getName() + "</li>");
+        }
+
+        out.println("</ul>");
+
+        out.println("<p>Vous avez demandé : " + request.getRequestURI() + "</p>");
+
+        // Sprint 2
+
+        out.println("<h2>Scan des méthodes terminé !</h2>");
+        out.println("<p>URL demandée : <strong>" + pathInfo + "</strong></p>");
+
+        // Vérification si l'URL existe dans notre urlMapping
+        out.println("<h2>Vérification du Mapping :</h2>");
+        /*
+         * if (urlMapping.containsKey(pathInfo)) {
+         * Mapping m = urlMapping.get(pathInfo);
+         * 
+         * 
+         * out.println("<p style='color: green;'><strong>Match trouvé !</strong></p>");
+         * out.println("<ul>");
+         * out.println("<li>Contrôleur : " + m.getClassName() + "</li>");
+         * out.println("<li>Méthode associée : " + m.getMethod() + "()</li>");
+         * out.println("</ul>");
+         * 
+         * } else {
+         * out.
+         * println("<p style='color: red;'>Aucune méthode associée à cette URL dans la HashMap.</p>"
+         * );
+         * }
+         * 
+         * // Affichage complet de la HashMap pour débogage
+         * out.println("<h2>Contenu complet de la HashMap (urlMapping)</h2>");
+         * out.println("<table border='1' cellpadding='5'>");
+         * out.
+         * println("<tr><th>URL / Clé</th><th>Classe associée</th><th>Méthode associée</th></tr>"
+         * );
+         * for (Map.Entry<String, Mapping> entry : urlMapping.entrySet()) {
+         * out.println("<tr>");
+         * out.println("<td>" + entry.getKey() + "</td>");
+         * out.println("<td>" + entry.getValue().getClassName() + "</td>");
+         * out.println("<td>" + entry.getValue().getMethod() + "()</td>");
+         * out.println("</tr>");
+         * }
+         * out.println("</table>");
+         */
+
+        out.println("<h2>Vérification du Mapping :</h2>");
+
+        if (urlMappingmethod.containsKey(requestKey)) { // Utilise automatiquement le hashCode et equals de UrlMethod
+            Mapping m = urlMappingmethod.get(requestKey);
+
+            try {
+                Class<?> clazz = Class.forName(m.getClassName());
+                Object controllerInstance = clazz.getDeclaredConstructor().newInstance();
+                Method method = clazz.getDeclaredMethod(m.getMethod());
+
+                // Invocation de la méthode du contrôleur
+                //method.invoke(controllerInstance);
+
+
+                Object returnValue = method.invoke(controllerInstance);
+
+                if (returnValue instanceof ModelView) {
+                    ModelView mv = (ModelView) returnValue;
+
+                    for (Map.Entry<String, Object> entry : mv.getData().entrySet()) {
+                        request.setAttribute(entry.getKey(), entry.getValue());
+                    }
+
+                    String viewPath = "/WEB-INF/views/" + mv.getUrl();
+                    RequestDispatcher dispatcher = request.getRequestDispatcher(viewPath);
+                    dispatcher.forward(request, response);
+                    return;
+                }
+
+                out.println("<p style='color: green;'><strong>Match trouvé et exécuté avec succès !</strong></p>");
+                out.println("<ul>");
+                out.println("<li>Contrôleur : " + m.getClassName() + "</li>");
+                out.println("<li>Méthode associée : " + m.getMethod() + "()</li>");
+                out.println("</ul>");
+            } catch (Exception e) {
+                out.println("<p style='color: red;'>Erreur lors de l'exécution : " + e.getMessage() + "</p>");
+                e.printStackTrace(out);
+            }
+        } else {
+            out.println("<p style='color: red;'>Aucune méthode associée à l'URL " + pathInfo + " avec la méthode "
+                    + httpMethod + "</p>");
+        }
+
+        // Affichage de la table de débogage mise à jour
+        out.println("<h2>Contenu complet de la HashMap (urlMapping)</h2>");
+        out.println("<table border='1' cellpadding='5'>");
+        out.println("<tr><th>Clé (UrlMethod)</th><th>Classe associée</th><th>Méthode associée</th></tr>");
+        for (Map.Entry<UrlMethod, Mapping> entry : urlMappingmethod.entrySet()) {
+            out.println("<tr>");
+            out.println("<td>" + entry.getKey().toString() + "</td>"); // Utilise le toString personnalisé
+            out.println("<td>" + entry.getValue().getClassName() + "</td>");
+            out.println("<td>" + entry.getValue().getMethod() + "()</td>");
+            out.println("</tr>");
+        }
+        out.println("</table></body></html>");
+
+        out.println("</body>");
+        out.println("</html>");
+    }
+}
+
+
+==================================================
+FICHIER : ./spring0/src/framework/util/Mapping.java
+==================================================
+package framework.util;
+
+public class Mapping {
+    private String className;
+    private String method;
+
+    public Mapping(String className, String methode) {
+        this.className = className;
+        this.method = methode;
+    }
+
+    public String getClassName() {
+        return className;
+    }
+
+    public void setClassName(String className) {
+        this.className = className;
+    }
+
+    public String getMethod() {
+        return method;
+    }
+
+    public void setMethod(String methode) {
+        this.method = methode;
+    }
+     
+}
+
+
+==================================================
+FICHIER : ./spring0/src/framework/util/ModelView.java
+==================================================
+package framework.util;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class ModelView {
+    private String url;
+    private Map<String, Object> data = new HashMap<>();
+
+    public ModelView() {}
+
+    public ModelView(String url) {
+        this.url = url;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public Map<String, Object> getData() {
+        return data;
+    }
+
+    // Fonction pour ajouter les données à envoyer à la vue
+    public void addItem(String key, Object value) {
+        this.data.put(key, value);
+    }
+}
+
+==================================================
+FICHIER : ./spring0/src/framework/util/UrlMethod.java
+==================================================
+package framework.util;
+
+import framework.annotation.UrlMapping;
+import java.util.Objects;
+
+public class UrlMethod {
+    private String url;
+    private String method;
+
+    public UrlMethod(String url, String method) {
+        this.url = url;
+        this.method = method;
+    }
+
+    public UrlMethod(UrlMapping urlannotation) {
+        this.url = urlannotation.value();
+        this.method = urlannotation.method();
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public String getMethod() {
+        return method;
+    }
+
+    public void setMethod(String method) {
+        this.method = method;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (!(obj instanceof UrlMethod))
+            return false;
+        UrlMethod other = (UrlMethod) obj;
+        return Objects.equals(this.url, other.url) && Objects.equals(this.method, other.method);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.url, this.method);
+    }
+
+    @Override
+    public String toString() {
+        return "[method : " + method + "] " + url + "[url: " + url + "]";
+    }
+
+}
+
+
+==================================================
+FICHIER : ./spring0/src/framework/util/Utils.java
+==================================================
+package framework.util;
+
+import framework.annotation.Get;
+import java.io.File;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+public class Utils {
+
+    public static List<Class<?>> findClassesByAnnotation(Class<? extends Annotation> annotation, String... basePackages)
+            throws Exception {
+        List<Class<?>> output = new ArrayList<>();
+        for (String basePackage : basePackages) {
+            List<Class<?>> classes = findClasses(basePackage);
+            for (Class<?> clazz : classes) {
+                if (clazz.getAnnotation(annotation) != null && !output.contains(clazz)) {
+                    output.add(clazz);
+                }
+            }
+        }
+
+        return output;
+    }
+
+    // correction Mr Naina
+    public static List<Class<?>> findClassesByAnnotation(Class<? extends Annotation> annotation,
+            HashMap<String, Mapping> urlMapping, String... basePackages)
+            throws Exception {
+        List<Class<?>> output = new ArrayList<>();
+        for (String basePackage : basePackages) {
+            List<Class<?>> classes = findClasses(basePackage);
+            for (Class<?> clazz : classes) {
+                if (clazz.getAnnotation(annotation) != null && !output.contains(clazz)) {
+                    output.add(clazz);
+                }
+
+                Method[] methods = clazz.getDeclaredMethods();
+                for (Method method : methods) {
+                    if (method.isAnnotationPresent(Get.class)) {
+                        Get getAnnotation = method.getAnnotation(Get.class);
+                        String url = getAnnotation.value();
+
+                        Mapping mapping = new Mapping(clazz.getName(), method.getName());
+
+                        urlMapping.put(url, mapping);
+                    }
+                }
+            }
+        }
+        return output;
+    }
+
+    public static List<Class<?>> findClasses(String packageName) throws Exception {
+
+        String packagePath = packageName.replace('.', '/');
+        List<Class<?>> classes = new ArrayList<>();
+        URL resource = Thread.currentThread()
+                .getContextClassLoader()
+                .getResource(packagePath);
+        if (resource == null) {
+            throw new Exception(
+                    "Package introuvable : "
+                            + packageName);
+        }
+        File packageDir = new File(resource.toURI());
+        File[] files = packageDir.listFiles();
+
+        for (File file : files) {
+            if (file.isFile() && file.getName().endsWith(".class")) {
+                String className = packageName + "." + file.getName().replace(".class", "");
+                classes.add(Class.forName(className));
+            } else if (file.isDirectory()) {
+                classes.addAll(findClasses(packageName + "." + file.getName()));
+            }
+        }
+
+        return classes;
+    }
+
+    public static List<Class<?>> findClassesMethodByAnnotation(Class<? extends Annotation> annotation,
+            HashMap<UrlMethod, Mapping> urlMapping, String... basePackages) throws Exception {
+        List<Class<?>> output = new ArrayList<>();
+        for (String basePackage : basePackages) {
+            List<Class<?>> classes = findClasses(basePackage);
+            for (Class<?> clazz : classes) {
+                if (clazz.getAnnotation(annotation) != null && !output.contains(clazz)) {
+                    output.add(clazz);
+                }
+
+                Method[] methods = clazz.getDeclaredMethods();
+                for (Method method : methods) {
+
+                    String url = null;
+                    String httpMethod = "GET";
+                    boolean hashMapping = false;
+
+                    if (method.isAnnotationPresent(Get.class)) {
+                        Get getAnnotation = method.getAnnotation(Get.class);
+                        url = getAnnotation.value();
+                        httpMethod = "GET";
+                        hashMapping = true;
+
+                    } else if (method.isAnnotationPresent(framework.annotation.UrlMapping.class)) {
+                        framework.annotation.UrlMapping urlAnnotation = method
+                                .getAnnotation(framework.annotation.UrlMapping.class);
+                        url = urlAnnotation.value();
+                        httpMethod = urlAnnotation.method().toUpperCase();
+                        hashMapping = true;
+                    }
+                    if (hashMapping) {
+                        UrlMethod urlKey = new UrlMethod(url, httpMethod);
+                        if (urlMapping.containsKey(urlKey)) {
+                            Mapping duplicate = urlMapping.get(urlKey);
+                            throw new Exception("Erreur de mapping d'URL en double détectée : L'URL '" + url
+                                    + "' (" + httpMethod + ") est déjà associée à " + duplicate.getClassName() + "."
+                                    + duplicate.getMethod()
+                                    + "(). Impossible de la lier également à " + clazz.getName() + "."
+                                    + method.getName() + "().");
+                        }
+
+                        Mapping mapping = new Mapping(clazz.getName(), method.getName());
+                        urlMapping.put(urlKey, mapping);
+                    }
+                }
+            }
+        }
+        return output;
+    }
+}
+
+
+==================================================
+FICHIER : ./To do.txt
+==================================================
+[] Creer dossier Spring0
+[] Structurer le projet
+    []- Classe FrontController.java
+        []-doGet/Post : qui fait n'importe on fait dans le navigateur renvoie 
+        dans la page
+        []-fonction handle() : fonction qui retourne une println ("html")
+        -----> la page qu'on va retourner sera dans la fonction **handle**
+    []-lib
+        []-On aura un servlet-api.jar pour pouvoir contenir les api et les bibliothèque
+
+    []-out
+        []-Compile+FrontController.class
+
+
+    + [ok] sprint 1:
+        creer annotation controller ::
+            -> annotation controller et lister 
+
+    + [x] sprint 2 :
+        creer annotation Method et afficher method 
+
+
+    + [==================================================
+EXPORT COMPLET DU PROJET
+Date : mar. 30 juin 2026 14:15:39 EAT
+Répertoire : /home/andrianandrainy/Documents/S4/Mr Aina & Mr Rindra/SprintSpringMvcMrNaina
+==================================================
+
+
+==================================================
+FICHIER : ./app-test/src/controller1/TestController4.java
+==================================================
+package controller1;
+
+import framework.annotation.Controller;
+import framework.annotation.Get;
+
+@Controller
+public class TestController4 {
+
+    @Get("/welcome")
+    public void hello() {
+    }
+
+}
+
+==================================================
+FICHIER : ./app-test/src/controller/Andrana.java
+==================================================
+package controller;
+
+import framework.annotation.Controller;
+import framework.annotation.Get;
+@Controller
+public class Andrana {
+    @Get("/andrana")
+    public void andrana() {
+    }
+}
+
+==================================================
+FICHIER : ./app-test/src/controller/TestController3.java
+==================================================
+package controller;
+
+import framework.annotation.Controller;
+
+@Controller
+public class TestController3 {
+
+}
+
+==================================================
+FICHIER : ./app-test/src/controller/TestController.java
+==================================================
+package controller;
+
+import framework.annotation.Controller;
+import framework.annotation.Get;
+import framework.annotation.UrlMapping;
+
+@Controller
+public class TestController {
+    @Get("/employe-list")
+    public void listEmploye() {
+        
+    }
+
+    @Get("/employe-add")
+    public void addEmploye() {
+    }
+
+    @Get("/andrana1")
+    public void andrana() {
+    }
+    @UrlMapping(value= "/andrana1",method ="POST")
+    public void andrana3() {
+    }
+
+}
+
+==================================================
+FICHIER : ./app-test/WEB-INF/web.xml
+==================================================
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_5_0.xsd"
+    version="5.0">
+
+    <servlet>
+        <servlet-name>FrontController</servlet-name>
+        <servlet-class>framework.servlet.FrontController</servlet-class>
+
+        <init-param>
+            <param-name>base-package</param-name>
+            <param-value>controller,controller1</param-value>
+        </init-param>
+
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>FrontController</servlet-name>
+        <url-pattern>/*</url-pattern>
+    </servlet-mapping>
+
+
+</web-app>
+
+==================================================
+FICHIER : ./.git
+==================================================
+
+
+==================================================
+FICHIER : ./source.txt
+==================================================
+
+
+==================================================
+FICHIER : ./spring0/out
+==================================================
+
+
+==================================================
+FICHIER : ./spring0/src/framework/annotation/Controller.java
+==================================================
+package framework.annotation;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Controller
+{
+}
+
+==================================================
+FICHIER : ./spring0/src/framework/annotation/Get.java
+==================================================
+package framework.annotation;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Get {
+    String value();
+}
+
+
+==================================================
+FICHIER : ./spring0/src/framework/annotation/UrlMapping.java
+==================================================
+package framework.annotation;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface UrlMapping {
+    String value();
+    String method() default  "GET";
+}
+
+
+==================================================
+FICHIER : ./spring0/src/framework/servlet/FrontController.java
+==================================================
+package framework.servlet;
+
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+//import jakarta.servlet.annotation.WebServlet;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import framework.annotation.Controller;
+import framework.annotation.Get;
+import framework.util.Mapping;
+import framework.util.Utils;
+import framework.util.UrlMethod;
+import java.util.HashMap;
+
+//@WebServlet("/*")
+
+public class FrontController extends HttpServlet {
+
+    private List<Class<?>> controllers = new ArrayList<>();
+    //private HashMap<String, Mapping> urlMapping = new HashMap<>();
+    private HashMap<UrlMethod, Mapping> urlMappingmethod = new HashMap<>();
+
+    @Override
+    public void init() throws ServletException {
+        String basePackages = this.getInitParameter("base-package");
+        try {
+            // controllers = Utils.findClassesByAnnotation(Controller.class,
+            // basePackages.split(","));
+            // controllers =
+            // Utils.findClassesByAnnotation(Controller.class,urlMapping,basePackages.split(","));
+            controllers = Utils.findClassesMethodByAnnotation(Controller.class, urlMappingmethod,
+                    basePackages.split(","));
+
+        } catch (Exception e) {
+            throw new ServletException(e);
+        }
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+
+        handle(request, response);
+    }
+
+    @Override
+
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+
+        handle(request, response);
+    }
+
+    private void handle(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        response.setContentType("text/html; charset=UTF-8");
+
+        PrintWriter out = response.getWriter();
+        // Récupérer le chemin tapé (Ex: /SprintSpringMvcMrNaina/employe-list -> on
+        // extrait juste la fin)
+        String pathInfo = request.getRequestURI().substring(request.getContextPath().length());
+  String httpMethod = request.getMethod();      
+        UrlMethod requestKey = new UrlMethod(pathInfo, httpMethod);
+
+        out.println("<!DOCTYPE html>");
+        out.println("<html>");
+        out.println("<head><title>spring0</title></head>");
+        out.println("<body>");
+        out.println("<h1>Bonjour depuis spring0 & 1 !</h1>");
+        out.println("<p>Methodes !: <strong>" + request.getMethod() + "</strong></p>");
+        out.println("<p> Path !: <strong>" + request.getServletPath() + "</strong></p>");
+        out.println("<h2>Contrôleurs détectés</h2>");
+        out.println("<ul>");
+
+        for (Class<?> controller : controllers) {
+            out.println("<li>" + controller.getName() + "</li>");
+        }
+
+        out.println("</ul>");
+
+        out.println("<p>Vous avez demandé : " + request.getRequestURI() + "</p>");
+
+        // Sprint 2
+
+        out.println("<h2>Scan des méthodes terminé !</h2>");
+        out.println("<p>URL demandée : <strong>" + pathInfo + "</strong></p>");
+
+        // Vérification si l'URL existe dans notre urlMapping
+        out.println("<h2>Vérification du Mapping :</h2>");
+        /*
+         * if (urlMapping.containsKey(pathInfo)) {
+         * Mapping m = urlMapping.get(pathInfo);
+         * 
+
+         * out.println("<p style='color: green;'><strong>Match trouvé !</strong></p>");
+         * out.println("<ul>");
+         * out.println("<li>Contrôleur : " + m.getClassName() + "</li>");
+         * out.println("<li>Méthode associée : " + m.getMethod() + "()</li>");
+         * out.println("</ul>");
+
+         * } else {
+         * out.
+         * println("<p style='color: red;'>Aucune méthode associée à cette URL dans la HashMap.</p>"
+         * );
+         * }
+         * 
+         * // Affichage complet de la HashMap pour débogage
+         * out.println("<h2>Contenu complet de la HashMap (urlMapping)</h2>");
+         * out.println("<table border='1' cellpadding='5'>");
+         * out.
+         * println("<tr><th>URL / Clé</th><th>Classe associée</th><th>Méthode associée</th></tr>"
+         * );
+         * for (Map.Entry<String, Mapping> entry : urlMapping.entrySet()) {
+         * out.println("<tr>");
+         * out.println("<td>" + entry.getKey() + "</td>");
+         * out.println("<td>" + entry.getValue().getClassName() + "</td>");
+         * out.println("<td>" + entry.getValue().getMethod() + "()</td>");
+         * out.println("</tr>");
+         * }
+         * out.println("</table>");
+         */
+
+        out.println("<h2>Vérification du Mapping :</h2>");
+
+        if (urlMappingmethod.containsKey(requestKey)) { // Utilise automatiquement le hashCode et equals de UrlMethod
+            Mapping m = urlMappingmethod.get(requestKey);
+
+            try {
+                Class<?> clazz = Class.forName(m.getClassName());
+                Object controllerInstance = clazz.getDeclaredConstructor().newInstance();
+                Method method = clazz.getDeclaredMethod(m.getMethod());
+
+                // Invocation de la méthode du contrôleur
+                method.invoke(controllerInstance);
+
+                out.println("<p style='color: green;'><strong>Match trouvé et exécuté avec succès !</strong></p>");
+                out.println("<ul>");
+                out.println("<li>Contrôleur : " + m.getClassName() + "</li>");
+                out.println("<li>Méthode associée : " + m.getMethod() + "()</li>");
+                out.println("</ul>");
+            } catch (Exception e) {
+                out.println("<p style='color: red;'>Erreur lors de l'exécution : " + e.getMessage() + "</p>");
+                e.printStackTrace(out);
+            }
+        } else {
+            out.println("<p style='color: red;'>Aucune méthode associée à l'URL " + pathInfo + " avec la méthode "
+                    + httpMethod + "</p>");
+        }
+
+        // Affichage de la table de débogage mise à jour
+        out.println("<h2>Contenu complet de la HashMap (urlMapping)</h2>");
+        out.println("<table border='1' cellpadding='5'>");
+        out.println("<tr><th>Clé (UrlMethod)</th><th>Classe associée</th><th>Méthode associée</th></tr>");
+        for (Map.Entry<UrlMethod, Mapping> entry : urlMappingmethod.entrySet()) {
+            out.println("<tr>");
+            out.println("<td>" + entry.getKey().toString() + "</td>"); // Utilise le toString personnalisé
+            out.println("<td>" + entry.getValue().getClassName() + "</td>");
+            out.println("<td>" + entry.getValue().getMethod() + "()</td>");
+            out.println("</tr>");
+        }
+        out.println("</table></body></html>");
+
+        out.println("</body>");
+        out.println("</html>");
+    }
+}
+
+
+==================================================
+FICHIER : ./spring0/src/framework/util/Mapping.java
+==================================================
+package framework.util;
+
+public class Mapping {
+    private String className;
+    private String method;
+
+    public Mapping(String className, String methode) {
+        this.className = className;
+        this.method = methode;
+    }
+
+    public String getClassName() {
+        return className;
+    }
+
+    public void setClassName(String className) {
+        this.className = className;
+    }
+
+    public String getMethod() {
+        return method;
+    }
+
+    public void setMethod(String methode) {
+        this.method = methode;
+    }
+     
+}
+
+
+==================================================
+FICHIER : ./spring0/src/framework/util/UrlMethod.java
+==================================================
+package framework.util;
+
+import framework.annotation.UrlMapping;
+import java.util.Objects;
+
+public class UrlMethod {
+    private String url;
+    private String method;
+
+    public UrlMethod(String url, String method) {
+        this.url = url;
+        this.method = method;
+    }
+
+    public UrlMethod(UrlMapping urlannotation) {
+        this.url = urlannotation.value();
+        this.method = urlannotation.method();
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public String getMethod() {
+        return method;
+    }
+
+    public void setMethod(String method) {
+        this.method = method;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (!(obj instanceof UrlMethod))
+            return false;
+        UrlMethod other = (UrlMethod) obj;
+        return Objects.equals(this.url, other.url) && Objects.equals(this.method, other.method);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.url, this.method);
+    }
+
+    @Override
+    public String toString() {
+        return "[method : " + method + "] " + url + "[url: " + url + "]";
+    }
+
+}
+
+
+==================================================
+FICHIER : ./spring0/src/framework/util/Utils.java
+==================================================
+package framework.util;
+
+import framework.annotation.Get;
+import java.io.File;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+public class Utils {
+
+    public static List<Class<?>> findClassesByAnnotation(Class<? extends Annotation> annotation, String... basePackages)
+            throws Exception {
+        List<Class<?>> output = new ArrayList<>();
+        for (String basePackage : basePackages) {
+            List<Class<?>> classes = findClasses(basePackage);
+            for (Class<?> clazz : classes) {
+                if (clazz.getAnnotation(annotation) != null && !output.contains(clazz)) {
+                    output.add(clazz);
+                }
+            }
+        }
+
+        return output;
+    }
+
+    // correction Mr Naina
+    public static List<Class<?>> findClassesByAnnotation(Class<? extends Annotation> annotation,
+            HashMap<String, Mapping> urlMapping, String... basePackages)
+            throws Exception {
+        List<Class<?>> output = new ArrayList<>();
+        for (String basePackage : basePackages) {
+            List<Class<?>> classes = findClasses(basePackage);
+            for (Class<?> clazz : classes) {
+                if (clazz.getAnnotation(annotation) != null && !output.contains(clazz)) {
+                    output.add(clazz);
+                }
+
+                Method[] methods = clazz.getDeclaredMethods();
+                for (Method method : methods) {
+                    if (method.isAnnotationPresent(Get.class)) {
+                        Get getAnnotation = method.getAnnotation(Get.class);
+                        String url = getAnnotation.value();
+
+                        Mapping mapping = new Mapping(clazz.getName(), method.getName());
+
+                        urlMapping.put(url, mapping);
+                    }
+                }
+            }
+        }
+        return output;
+    }
+
+    public static List<Class<?>> findClasses(String packageName) throws Exception {
+
+        String packagePath = packageName.replace('.', '/');
+        List<Class<?>> classes = new ArrayList<>();
+        URL resource = Thread.currentThread()
+                .getContextClassLoader()
+                .getResource(packagePath);
+        if (resource == null) {
+            throw new Exception(
+                    "Package introuvable : "
+                            + packageName);
+        }
+        File packageDir = new File(resource.toURI());
+        File[] files = packageDir.listFiles();
+
+        for (File file : files) {
+            if (file.isFile() && file.getName().endsWith(".class")) {
+                String className = packageName + "." + file.getName().replace(".class", "");
+                classes.add(Class.forName(className));
+            } else if (file.isDirectory()) {
+                classes.addAll(findClasses(packageName + "." + file.getName()));
+            }
+        }
+
+        return classes;
+    }
+
+    public static List<Class<?>> findClassesMethodByAnnotation(Class<? extends Annotation> annotation,
+            HashMap<UrlMethod, Mapping> urlMapping, String... basePackages) throws Exception {
+        List<Class<?>> output = new ArrayList<>();
+        for (String basePackage : basePackages) {
+            List<Class<?>> classes = findClasses(basePackage);
+            for (Class<?> clazz : classes) {
+                if (clazz.getAnnotation(annotation) != null && !output.contains(clazz)) {
+                    output.add(clazz);
+                }
+
+                Method[] methods = clazz.getDeclaredMethods();
+                for (Method method : methods) {
+
+                    String url = null;
+                    String httpMethod = "GET";
+                    boolean hashMapping = false;
+
+                    if (method.isAnnotationPresent(Get.class)) {
+                        Get getAnnotation = method.getAnnotation(Get.class);
+                        url = getAnnotation.value();
+                        httpMethod = "GET";
+                        hashMapping = true;
+
+                    } else if (method.isAnnotationPresent(framework.annotation.UrlMapping.class)) {
+                        framework.annotation.UrlMapping urlAnnotation = method
+                                .getAnnotation(framework.annotation.UrlMapping.class);
+                        url = urlAnnotation.value();
+                        httpMethod = urlAnnotation.method().toUpperCase();
+                        hashMapping = true;
+                    }
+                    if (hashMapping) {
+                        UrlMethod urlKey = new UrlMethod(url, httpMethod);
+                        if (urlMapping.containsKey(urlKey)) {
+                            Mapping duplicate = urlMapping.get(urlKey);
+                            throw new Exception("Erreur de mapping d'URL en double détectée : L'URL '" + url
+                                    + "' (" + httpMethod + ") est déjà associée à " + duplicate.getClassName() + "."
+                                    + duplicate.getMethod()
+                                    + "(). Impossible de la lier également à " + clazz.getName() + "."
+                                    + method.getName() + "().");
+                        }
+
+                        Mapping mapping = new Mapping(clazz.getName(), method.getName());
+                        urlMapping.put(urlKey, mapping);
+                    }
+                }
+            }
+        }
+        return output;
+    }
+}
+
+
+==================================================
+FICHIER : ./To do.txt
+==================================================
+[] Creer dossier Spring0
+[] Structurer le projet
+    []- Classe FrontController.java
+        []-doGet/Post : qui fait n'importe on fait dans le navigateur renvoie 
+        dans la page
+        []-fonction handle() : fonction qui retourne une println ("html")
+        -----> la page qu'on va retourner sera dans la fonction **handle**
+    []-lib
+        []-On aura un servlet-api.jar pour pouvoir contenir les api et les bibliothèque
+
+    []-out
+        []-Compile+FrontController.class
+
+
+    + [ok] sprint 1:
+        creer annotation controller ::
+            -> annotation controller et lister 
+
+    + [x] sprint 2 :
+        creer annotation Method et afficher method 
+
+
+    + [] normallement si je fait test :
+
+        meme methodes mais dans des classes
+
+
+    + [ ] sprint3 :
+        + [ ] instancier le controlleurs trouvér
+        + [ ] excecuter methode
+        + [ ] recuperer ce qu elle renvoie
+
+
+    + [ ] sprint3 ibis :
+        + [ ] deux methodes ont le meme url 
+        + [ ] exception si la méthode n ' existe pas 
+] normallement si je fait test :
+
+        meme methodes mais dans des classes
+
+
+    + [ ] sprint3 :
+        + [ ] instancier le controlleurs trouvér
+        + [ ] excecuter methode
+        + [ ] recuperer ce qu elle renvoie
+
+
+    + [ ] sprint3 ibis :
+        + [ ] deux methodes ont le meme url 
+        + [ ] exception si la méthode n ' existe pas 
+    + [ ] sprint 4 
+        + [ ]  utiliser listener au lieu de init 
+
+
+    + [ ] sprint 5:
+        + [ ] Modifier vue ::
+            + [ ] setUrl 
+            + [ ]setMethod 
+        + [ ] Map value
+            Vieew 
+        
+        +  [ ]cote front 
+            + [ ] suffixe :WEB-INF/views/
+            + [ ] prefixe 
+            + [ ] terminaisom : *.jsp
+

@@ -1,0 +1,12 @@
+{
+    "java.project.sourcePaths": [
+        "spring0/src",
+        "app-test/src"
+    ],
+     "java.project.outputPath": ".vscode/out",
+    "java.project.referencedLibraries": [
+        "spring0/lib/**/*.jar",
+        "app-test/lib/**/*.jar",
+        "app-test/WEB-INF/lib/**/*.jar"
+    ]
+}
