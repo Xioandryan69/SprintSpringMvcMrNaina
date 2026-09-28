@@ -1,5 +1,5 @@
 #!/bin/bash
-TOMCAT_SOURCE="/home/andrianandrainy/Documents/S4/Mr Aina & Mr Rindra/tomcat2"
+TOMCAT_SOURCE="/home/huhu/S5/Mr Aina & Mr Rindra/apache-tomcat-11.0.21"
 # creer le dossier out 
 # compiler les classes java
 rm -rf WEB-INF/classes/*
