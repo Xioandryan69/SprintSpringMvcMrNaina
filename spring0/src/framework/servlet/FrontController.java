@@ -15,6 +15,7 @@ import java.util.Map;
 
 import framework.annotation.Controller;
 import framework.annotation.Get;
+import framework.annotation.WebApi;
 import framework.util.Mapping;
 import framework.util.Utils;
 import framework.util.UrlMethod;
@@ -22,6 +23,11 @@ import java.util.HashMap;
 
 import framework.util.ModelView;
 import jakarta.servlet.RequestDispatcher;
+import java.lang.reflect.Field;
+import java.util.Map;
+import java.util.StringJoiner;
+
+
 
 //@WebServlet("/*")
 
@@ -30,6 +36,60 @@ public class FrontController extends HttpServlet {
     private List<Class<?>> controllers = new ArrayList<>();
     // private HashMap<String, Mapping> urlMapping = new HashMap<>();
     private HashMap<UrlMethod, Mapping> urlMappingmethod = new HashMap<>();
+
+
+    private String toJsonNative(Object obj) {
+        if (obj == null) {
+            return "null";
+        }
+        
+        // 1. Gestion des chaînes et caractères
+        if (obj instanceof CharSequence || obj instanceof Character) {
+            return "\"" + obj.toString().replace("\"", "\\\"") + "\"";
+        }
+        
+        // 2. Gestion des nombres et booléens (pas de guillemets)
+        if (obj instanceof Number || obj instanceof Boolean) {
+            return obj.toString();
+        }
+        
+        // 3. Gestion des Listes / Tableaux / Collections (Iterable)
+        if (obj instanceof Iterable) {
+            StringJoiner joiner = new StringJoiner(",", "[", "]");
+            for (Object item : (Iterable<?>) obj) {
+                joiner.add(toJsonNative(item));
+            }
+            return joiner.toString();
+        }
+        
+        // 4. Gestion des Maps (dictionnaires)
+        if (obj instanceof Map) {
+            StringJoiner joiner = new StringJoiner(",", "{", "}");
+            for (Map.Entry<?, ?> entry : ((Map<?, ?>) obj).entrySet()) {
+                String key = "\"" + entry.getKey().toString().replace("\"", "\\\"") + "\"";
+                String value = toJsonNative(entry.getValue());
+                joiner.add(key + ":" + value);
+            }
+            return joiner.toString();
+        }
+        
+        // 5. Gestion des DTOs / Objets personnalisés via Réflexion
+        try {
+            StringJoiner joiner = new StringJoiner(",", "{", "}");
+            Field[] fields = obj.getClass().getDeclaredFields();
+            for (Field field : fields) {
+                field.setAccessible(true); // Permet de lire les attributs privés
+                String key = "\"" + field.getName() + "\"";
+                String value = toJsonNative(field.get(obj));
+                joiner.add(key + ":" + value);
+            }
+            return joiner.toString();
+        } catch (Exception e) {
+            return "{}"; // Repli en cas d'erreur de lecture
+        }
+    }
+
+
 
     @Override
     public void init() throws ServletException {
@@ -85,7 +145,25 @@ public class FrontController extends HttpServlet {
                 // method.invoke(controllerInstance);
 
                 Object returnValue = method.invoke(controllerInstance);
+                if (method.isAnnotationPresent(WebApi.class)) {
+                    response.setContentType("application/json; charset=UTF-8");
+                    PrintWriter out = response.getWriter();
 
+                    if (returnValue != null) {
+                        // Si la méthode renvoie un ModelView, on extrait ses données
+                        if (returnValue instanceof ModelView) {
+                            ModelView mv = (ModelView) returnValue;
+                            out.print(toJsonNative(mv.getData()));
+                        } else {
+                            out.print(toJsonNative(returnValue));
+                        }
+
+                    } else {
+                        out.print("{}");
+                    }
+                    out.flush();
+                    return;
+                }
                 if (returnValue instanceof ModelView) {
                     ModelView mv = (ModelView) returnValue;
 

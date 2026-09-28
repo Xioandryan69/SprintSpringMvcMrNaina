@@ -1,7 +1,7 @@
 ==================================================
 EXPORT COMPLET DU PROJET
-Date : mar. 07 juil. 2026 09:35:44 EAT
-Répertoire : /home/andrianandrainy/Documents/S4/Mr Aina & Mr Rindra/SprintSpringMvcMrNaina
+Date : lun. 28 sept 2026 11:56:22 EAT
+Répertoire : /home/huhu/Documents/GitHub/SprintSpringMvcMrNaina
 ==================================================
 
 
@@ -53,23 +53,79 @@ public class TestController3 {
 ==================================================
 FICHIER : ./app-test/src/controller/TestController.java
 ==================================================
+// package controller;
+
+// import framework.annotation.Controller;
+// import framework.annotation.Get;
+// import framework.annotation.UrlMapping;
+// import framework.util.ModelView;
+
+// @Controller
+// public class TestController {
+//     @Get("/employe-list")
+//     public ModelView listEmploye() {
+//         ModelView mv = new ModelView("employe-list.jsp");
+        
+//         // Ajout de données de test à transmettre à la JSP
+//         mv.addItem("titre", "Liste des Employés");
+//         mv.addItem("message", "Bienvenue sur la page de gestion des employés !");
+        
+//         return mv;
+//     }
+
+//     @Get("/employe-add")
+//     public void addEmploye() {
+//     }
+
+//     @Get("/andrana1")
+//     public void andrana() {
+//     }
+//     @UrlMapping(value= "/andrana1",method ="POST")
+//     public void andrana3() {
+//     }
+
+// }
+
 package controller;
 
 import framework.annotation.Controller;
 import framework.annotation.Get;
 import framework.annotation.UrlMapping;
+import framework.util.DatabaseConnection;
 import framework.util.ModelView;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
+
 @Controller
-public class TestController {
+public class TestController { 
+
     @Get("/employe-list")
     public ModelView listEmploye() {
         ModelView mv = new ModelView("employe-list.jsp");
-        
-        // Ajout de données de test à transmettre à la JSP
-        mv.addItem("titre", "Liste des Employés");
-        mv.addItem("message", "Bienvenue sur la page de gestion des employés !");
-        
+        List<String> listeEmployes = new ArrayList<>();
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement("SELECT nom, prenom, poste FROM employe");
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                String emp = rs.getString("nom") + " " + rs.getString("prenom") + " (" + rs.getString("poste") + ")";
+                listeEmployes.add(emp);
+            }
+
+            mv.addItem("titre", "Liste des Employés");
+            mv.addItem("message", "Données récupérées directement depuis MySQL !");
+            mv.addItem("employes", listeEmployes);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            mv.addItem("message", "Erreur lors de la connexion à la base de données : " + e.getMessage());
+        }
+
         return mv;
     }
 
@@ -83,23 +139,66 @@ public class TestController {
     @UrlMapping(value= "/andrana1",method ="POST")
     public void andrana3() {
     }
-
 }
 
 ==================================================
 FICHIER : ./app-test/WEB-INF/views/employe-list.jsp
 ==================================================
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="java.util.List" %>
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Sprint 5 - Vue</title>
+    <title>Sprint 5 - Tarree Hojjettootaa</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { border-collapse: collapse; width: 60%; margin-top: 15px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #4CAF50; color: white; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+    </style>
 </head>
 <body>
     <h1>${titre}</h1>
     <p>${message}</p>
     
     <hr>
+
+    <h3>Tarree Hojjettootaa:</h3>
+    
+    <%-- Tarree hojjettootaa controllers irraa ergame argarsiisuuf --%>
+    <% 
+        List<String> employes = (List<String>) request.getAttribute("employes");
+        if (employes != null && !employes.isEmpty()) {
+    %>
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Maqaa fi Posti Hojjetaa</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% 
+                    int index = 1;
+                    for (String emp : employes) { 
+                %>
+                    <tr>
+                        <td><%= index++ %></td>
+                        <td><%= emp %></td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+    <% 
+        } else { 
+    %>
+        <p style="color: red;">Hojjetaan tokkollee maapaa database irraa hin argamne.</p>
+    <% 
+        } 
+    %>
+
+    <br><hr>
     <p style="color: gray; font-size: 0.8em;">Rendu généré via WEB-INF/views/</p>
 </body>
 </html>
@@ -131,7 +230,7 @@ FICHIER : ./app-test/WEB-INF/web.xml
 
     <servlet-mapping>
         <servlet-name>FrontController</servlet-name>
-        <url-pattern>/*</url-pattern>
+        <url-pattern>/</url-pattern>
     </servlet-mapping>
 
 
@@ -200,6 +299,24 @@ import java.lang.annotation.Target;
 public @interface UrlMapping {
     String value();
     String method() default  "GET";
+}
+
+
+==================================================
+FICHIER : ./spring0/src/framework/annotation/WebApi.java
+==================================================
+package framework.annotation;
+
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface WebApi {
+    String value() default  "";
 }
 
 
@@ -325,74 +442,12 @@ public class FrontController extends HttpServlet {
     private void handle(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
 
-        response.setContentType("text/html; charset=UTF-8");
-
-        PrintWriter out = response.getWriter();
+       // PrintWriter out = response.getWriter();
         // Récupérer le chemin tapé (Ex: /SprintSpringMvcMrNaina/employe-list -> on
         // extrait juste la fin)
         String pathInfo = request.getRequestURI().substring(request.getContextPath().length());
         String httpMethod = request.getMethod();
         UrlMethod requestKey = new UrlMethod(pathInfo, httpMethod);
-
-        out.println("<!DOCTYPE html>");
-        out.println("<html>");
-        out.println("<head><title>spring0</title></head>");
-        out.println("<body>");
-        out.println("<h1>Bonjour depuis spring0 & 1 !</h1>");
-        out.println("<p>Methodes !: <strong>" + request.getMethod() + "</strong></p>");
-        out.println("<p> Path !: <strong>" + request.getServletPath() + "</strong></p>");
-        out.println("<h2>Contrôleurs détectés</h2>");
-        out.println("<ul>");
-
-        for (Class<?> controller : controllers) {
-            out.println("<li>" + controller.getName() + "</li>");
-        }
-
-        out.println("</ul>");
-
-        out.println("<p>Vous avez demandé : " + request.getRequestURI() + "</p>");
-
-        // Sprint 2
-
-        out.println("<h2>Scan des méthodes terminé !</h2>");
-        out.println("<p>URL demandée : <strong>" + pathInfo + "</strong></p>");
-
-        // Vérification si l'URL existe dans notre urlMapping
-        out.println("<h2>Vérification du Mapping :</h2>");
-        /*
-         * if (urlMapping.containsKey(pathInfo)) {
-         * Mapping m = urlMapping.get(pathInfo);
-         * 
-         * 
-         * out.println("<p style='color: green;'><strong>Match trouvé !</strong></p>");
-         * out.println("<ul>");
-         * out.println("<li>Contrôleur : " + m.getClassName() + "</li>");
-         * out.println("<li>Méthode associée : " + m.getMethod() + "()</li>");
-         * out.println("</ul>");
-         * 
-         * } else {
-         * out.
-         * println("<p style='color: red;'>Aucune méthode associée à cette URL dans la HashMap.</p>"
-         * );
-         * }
-         * 
-         * // Affichage complet de la HashMap pour débogage
-         * out.println("<h2>Contenu complet de la HashMap (urlMapping)</h2>");
-         * out.println("<table border='1' cellpadding='5'>");
-         * out.
-         * println("<tr><th>URL / Clé</th><th>Classe associée</th><th>Méthode associée</th></tr>"
-         * );
-         * for (Map.Entry<String, Mapping> entry : urlMapping.entrySet()) {
-         * out.println("<tr>");
-         * out.println("<td>" + entry.getKey() + "</td>");
-         * out.println("<td>" + entry.getValue().getClassName() + "</td>");
-         * out.println("<td>" + entry.getValue().getMethod() + "()</td>");
-         * out.println("</tr>");
-         * }
-         * out.println("</table>");
-         */
-
-        out.println("<h2>Vérification du Mapping :</h2>");
 
         if (urlMappingmethod.containsKey(requestKey)) { // Utilise automatiquement le hashCode et equals de UrlMethod
             Mapping m = urlMappingmethod.get(requestKey);
@@ -403,8 +458,7 @@ public class FrontController extends HttpServlet {
                 Method method = clazz.getDeclaredMethod(m.getMethod());
 
                 // Invocation de la méthode du contrôleur
-                //method.invoke(controllerInstance);
-
+                // method.invoke(controllerInstance);
 
                 Object returnValue = method.invoke(controllerInstance);
 
@@ -420,39 +474,150 @@ public class FrontController extends HttpServlet {
                     dispatcher.forward(request, response);
                     return;
                 }
+                response.setContentType("text/html; charset=UTF-8");
+                PrintWriter out = response.getWriter();
+                out.println("<!DOCTYPE html>");
+                out.println("<html>");
+                out.println("<head><title>spring0</title></head>");
+                out.println("<body>");
+                out.println("<h1>Bonjour depuis spring0 & 1 !</h1>");
+                out.println("<p>Methodes !: <strong>" + request.getMethod() + "</strong></p>");
+                out.println("<p> Path !: <strong>" + request.getServletPath() + "</strong></p>");
+                out.println("<h2>Contrôleurs détectés</h2>");
+                out.println("<ul>");
+
+                for (Class<?> controller : controllers) {
+                    out.println("<li>" + controller.getName() + "</li>");
+                }
+
+                out.println("</ul>");
+
+                out.println("<p>Vous avez demandé : " + request.getRequestURI() + "</p>");
+
+                // Sprint 2
+
+                out.println("<h2>Scan des méthodes terminé !</h2>");
+                out.println("<p>URL demandée : <strong>" + pathInfo + "</strong></p>");
+
+                // Vérification si l'URL existe dans notre urlMapping
+                out.println("<h2>Vérification du Mapping :</h2>");
+                /*
+                 * if (urlMapping.containsKey(pathInfo)) {
+                 * Mapping m = urlMapping.get(pathInfo);
+                 * 
+                 * 
+                 * out.println("<p style='color: green;'><strong>Match trouvé !</strong></p>");
+                 * out.println("<ul>");
+                 * out.println("<li>Contrôleur : " + m.getClassName() + "</li>");
+                 * out.println("<li>Méthode associée : " + m.getMethod() + "()</li>");
+                 * out.println("</ul>");
+                 * 
+                 * } else {
+                 * out.
+                 * println("<p style='color: red;'>Aucune méthode associée à cette URL dans la HashMap.</p>"
+                 * );
+                 * }
+                 * 
+                 * // Affichage complet de la HashMap pour débogage
+                 * out.println("<h2>Contenu complet de la HashMap (urlMapping)</h2>");
+                 * out.println("<table border='1' cellpadding='5'>");
+                 * out.
+                 * println("<tr><th>URL / Clé</th><th>Classe associée</th><th>Méthode associée</th></tr>"
+                 * );
+                 * for (Map.Entry<String, Mapping> entry : urlMapping.entrySet()) {
+                 * out.println("<tr>");
+                 * out.println("<td>" + entry.getKey() + "</td>");
+                 * out.println("<td>" + entry.getValue().getClassName() + "</td>");
+                 * out.println("<td>" + entry.getValue().getMethod() + "()</td>");
+                 * out.println("</tr>");
+                 * }
+                 * out.println("</table>");
+                 */
+
+                out.println("<h2>Vérification du Mapping :</h2>");
 
                 out.println("<p style='color: green;'><strong>Match trouvé et exécuté avec succès !</strong></p>");
                 out.println("<ul>");
                 out.println("<li>Contrôleur : " + m.getClassName() + "</li>");
                 out.println("<li>Méthode associée : " + m.getMethod() + "()</li>");
                 out.println("</ul>");
+                out.println("</body>");
+                out.println("</html>");
             } catch (Exception e) {
+                response.setContentType("text/html; charset=UTF-8");
+                 PrintWriter out = response.getWriter();
                 out.println("<p style='color: red;'>Erreur lors de l'exécution : " + e.getMessage() + "</p>");
                 e.printStackTrace(out);
             }
-        } else {
-            out.println("<p style='color: red;'>Aucune méthode associée à l'URL " + pathInfo + " avec la méthode "
-                    + httpMethod + "</p>");
-        }
+        }  else {
+            // Affichage de la page de débogage uniquement si aucune route ne matche
+            response.setContentType("text/html; charset=UTF-8");
+             PrintWriter out = response.getWriter();
+            out.println("<!DOCTYPE html>");
+            out.println("<html>");
+            out.println("<head><title>spring0 - Débogage</title></head>");
+            out.println("<body>");
+            out.println("<h1>Bonjour depuis spring0 & 1 !</h1>");
+            out.println("<p>Méthode HTTP : <strong>" + httpMethod + "</strong></p>");
+            out.println("<p>Path demandé : <strong>" + pathInfo + "</strong></p>");
+            
+            out.println("<p style='color: red;'>Aucune méthode associée à l'URL " + pathInfo + " avec la méthode " + httpMethod + "</p>");
 
-        // Affichage de la table de débogage mise à jour
-        out.println("<h2>Contenu complet de la HashMap (urlMapping)</h2>");
-        out.println("<table border='1' cellpadding='5'>");
-        out.println("<tr><th>Clé (UrlMethod)</th><th>Classe associée</th><th>Méthode associée</th></tr>");
-        for (Map.Entry<UrlMethod, Mapping> entry : urlMappingmethod.entrySet()) {
-            out.println("<tr>");
-            out.println("<td>" + entry.getKey().toString() + "</td>"); // Utilise le toString personnalisé
-            out.println("<td>" + entry.getValue().getClassName() + "</td>");
-            out.println("<td>" + entry.getValue().getMethod() + "()</td>");
-            out.println("</tr>");
-        }
-        out.println("</table></body></html>");
+            out.println("<h2>Contrôleurs détectés</h2><ul>");
+            if (controllers != null) {
+                for (Class<?> controller : controllers) {
+                    out.println("<li>" + controller.getName() + "</li>");
+                }
+            }
+            out.println("</ul>");
 
-        out.println("</body>");
-        out.println("</html>");
+            out.println("<h2>Contenu complet de la HashMap (urlMapping)</h2>");
+            out.println("<table border='1' cellpadding='5'>");
+            out.println("<tr><th>Clé (UrlMethod)</th><th>Classe associée</th><th>Méthode associée</th></tr>");
+            if (urlMappingmethod != null) {
+                for (Map.Entry<UrlMethod, Mapping> entry : urlMappingmethod.entrySet()) {
+                    out.println("<tr>");
+                    out.println("<td>" + entry.getKey().toString() + "</td>");
+                    out.println("<td>" + entry.getValue().getClassName() + "</td>");
+                    out.println("<td>" + entry.getValue().getMethod() + "()</td>");
+                    out.println("</tr>");
+                }
+            }
+            out.println("</table></body></html>");
+            out.println("</body>");
+            out.println("</html>");
+        }
     }
 }
 
+
+==================================================
+FICHIER : ./spring0/src/framework/util/DatabaseConnection.java
+==================================================
+package framework.util;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+public class DatabaseConnection {
+
+    private static final String URL = "jdbc:mysql://localhost:3306/devdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
+    private static final String USER = "admin";
+    private static final String PASSWORD = "admin123";
+
+    static {
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+        } catch (ClassNotFoundException e) {
+            System.err.println("[DatabaseConnection] Driver MySQL introuvable : " + e.getMessage());
+        }
+    }
+
+    public static Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(URL, USER, PASSWORD);
+    }
+}
 
 ==================================================
 FICHIER : ./spring0/src/framework/util/Mapping.java
