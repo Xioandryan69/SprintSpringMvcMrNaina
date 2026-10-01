@@ -1,6 +1,6 @@
 ==================================================
 EXPORT COMPLET DU PROJET
-Date : lun. 28 sept 2026 11:56:22 EAT
+Date : mer. 30 sept 2026 08:28:08 EAT
 Répertoire : /home/huhu/Documents/GitHub/SprintSpringMvcMrNaina
 ==================================================
 
@@ -53,23 +53,79 @@ public class TestController3 {
 ==================================================
 FICHIER : ./app-test/src/controller/TestController.java
 ==================================================
+// // package controller;
+
+// // import framework.annotation.Controller;
+// // import framework.annotation.Get;
+// // import framework.annotation.UrlMapping;
+// // import framework.util.ModelView;
+
+// // @Controller
+// // public class TestController {
+// //     @Get("/employe-list")
+// //     public ModelView listEmploye() {
+// //         ModelView mv = new ModelView("employe-list.jsp");
+        
+// //         // Ajout de données de test à transmettre à la JSP
+// //         mv.addItem("titre", "Liste des Employés");
+// //         mv.addItem("message", "Bienvenue sur la page de gestion des employés !");
+        
+// //         return mv;
+// //     }
+
+// //     @Get("/employe-add")
+// //     public void addEmploye() {
+// //     }
+
+// //     @Get("/andrana1")
+// //     public void andrana() {
+// //     }
+// //     @UrlMapping(value= "/andrana1",method ="POST")
+// //     public void andrana3() {
+// //     }
+
+// // }
+
 // package controller;
 
 // import framework.annotation.Controller;
 // import framework.annotation.Get;
 // import framework.annotation.UrlMapping;
+// import framework.util.DatabaseConnection;
 // import framework.util.ModelView;
 
+// import java.sql.Connection;
+// import java.sql.PreparedStatement;
+// import java.sql.ResultSet;
+// import java.util.ArrayList;
+// import java.util.List;
+
 // @Controller
-// public class TestController {
+// public class TestController { 
+
 //     @Get("/employe-list")
 //     public ModelView listEmploye() {
 //         ModelView mv = new ModelView("employe-list.jsp");
-        
-//         // Ajout de données de test à transmettre à la JSP
-//         mv.addItem("titre", "Liste des Employés");
-//         mv.addItem("message", "Bienvenue sur la page de gestion des employés !");
-        
+//         List<String> listeEmployes = new ArrayList<>();
+
+//         try (Connection conn = DatabaseConnection.getConnection();
+//              PreparedStatement stmt = conn.prepareStatement("SELECT nom, prenom, poste FROM employe");
+//              ResultSet rs = stmt.executeQuery()) {
+
+//             while (rs.next()) {
+//                 String emp = rs.getString("nom") + " " + rs.getString("prenom") + " (" + rs.getString("poste") + ")";
+//                 listeEmployes.add(emp);
+//             }
+
+//             mv.addItem("titre", "Liste des Employés");
+//             mv.addItem("message", "Données récupérées directement depuis MySQL !");
+//             mv.addItem("employes", listeEmployes);
+
+//         } catch (Exception e) {
+//             e.printStackTrace();
+//             mv.addItem("message", "Erreur lors de la connexion à la base de données : " + e.getMessage());
+//         }
+
 //         return mv;
 //     }
 
@@ -83,61 +139,39 @@ FICHIER : ./app-test/src/controller/TestController.java
 //     @UrlMapping(value= "/andrana1",method ="POST")
 //     public void andrana3() {
 //     }
-
 // }
 
 package controller;
 
 import framework.annotation.Controller;
 import framework.annotation.Get;
-import framework.annotation.UrlMapping;
-import framework.util.DatabaseConnection;
+import framework.annotation.WebApi;
 import framework.util.ModelView;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 @Controller
 public class TestController { 
 
-    @Get("/employe-list")
-    public ModelView listEmploye() {
-        ModelView mv = new ModelView("employe-list.jsp");
-        List<String> listeEmployes = new ArrayList<>();
+    // Exemple 1 : Méthode renvoyant un objet/map en JSON
+    @Get("/api/status")
+    @WebApi
+    public Map<String, Object> getStatusApi() {
+        Map<String, Object> status = new HashMap<>();
+        status.put("code", 200);
+        status.put("message", "API Fonctionnelle");
+        return status;
+    }
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("SELECT nom, prenom, poste FROM employe");
-             ResultSet rs = stmt.executeQuery()) {
-
-            while (rs.next()) {
-                String emp = rs.getString("nom") + " " + rs.getString("prenom") + " (" + rs.getString("poste") + ")";
-                listeEmployes.add(emp);
-            }
-
-            mv.addItem("titre", "Liste des Employés");
-            mv.addItem("message", "Données récupérées directement depuis MySQL !");
-            mv.addItem("employes", listeEmployes);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            mv.addItem("message", "Erreur lors de la connexion à la base de données : " + e.getMessage());
-        }
-
+    // Exemple 2 : Méthode renvoyant un ModelView transformé automatiquement en JSON
+    @Get("/api/employes")
+    @WebApi
+    public ModelView getEmployesJson() {
+        ModelView mv = new ModelView();
+        mv.addItem("titre", "Liste API");
+        mv.addItem("total", 2);
         return mv;
-    }
-
-    @Get("/employe-add")
-    public void addEmploye() {
-    }
-
-    @Get("/andrana1")
-    public void andrana() {
-    }
-    @UrlMapping(value= "/andrana1",method ="POST")
-    public void andrana3() {
     }
 }
 
@@ -391,6 +425,7 @@ import java.util.Map;
 
 import framework.annotation.Controller;
 import framework.annotation.Get;
+import framework.annotation.WebApi;
 import framework.util.Mapping;
 import framework.util.Utils;
 import framework.util.UrlMethod;
@@ -398,6 +433,11 @@ import java.util.HashMap;
 
 import framework.util.ModelView;
 import jakarta.servlet.RequestDispatcher;
+import java.lang.reflect.Field;
+import java.util.Map;
+import java.util.StringJoiner;
+
+
 
 //@WebServlet("/*")
 
@@ -406,6 +446,60 @@ public class FrontController extends HttpServlet {
     private List<Class<?>> controllers = new ArrayList<>();
     // private HashMap<String, Mapping> urlMapping = new HashMap<>();
     private HashMap<UrlMethod, Mapping> urlMappingmethod = new HashMap<>();
+
+
+    private String toJsonNative(Object obj) {
+        if (obj == null) {
+            return "null";
+        }
+        
+        // 1. Gestion des chaînes et caractères
+        if (obj instanceof CharSequence || obj instanceof Character) {
+            return "\"" + obj.toString().replace("\"", "\\\"") + "\"";
+        }
+        
+        // 2. Gestion des nombres et booléens (pas de guillemets)
+        if (obj instanceof Number || obj instanceof Boolean) {
+            return obj.toString();
+        }
+        
+        // 3. Gestion des Listes / Tableaux / Collections (Iterable)
+        if (obj instanceof Iterable) {
+            StringJoiner joiner = new StringJoiner(",", "[", "]");
+            for (Object item : (Iterable<?>) obj) {
+                joiner.add(toJsonNative(item));
+            }
+            return joiner.toString();
+        }
+        
+        // 4. Gestion des Maps (dictionnaires)
+        if (obj instanceof Map) {
+            StringJoiner joiner = new StringJoiner(",", "{", "}");
+            for (Map.Entry<?, ?> entry : ((Map<?, ?>) obj).entrySet()) {
+                String key = "\"" + entry.getKey().toString().replace("\"", "\\\"") + "\"";
+                String value = toJsonNative(entry.getValue());
+                joiner.add(key + ":" + value);
+            }
+            return joiner.toString();
+        }
+        
+        // 5. Gestion des DTOs / Objets personnalisés via Réflexion
+        try {
+            StringJoiner joiner = new StringJoiner(",", "{", "}");
+            Field[] fields = obj.getClass().getDeclaredFields();
+            for (Field field : fields) {
+                field.setAccessible(true); // Permet de lire les attributs privés
+                String key = "\"" + field.getName() + "\"";
+                String value = toJsonNative(field.get(obj));
+                joiner.add(key + ":" + value);
+            }
+            return joiner.toString();
+        } catch (Exception e) {
+            return "{}"; // Repli en cas d'erreur de lecture
+        }
+    }
+
+
 
     @Override
     public void init() throws ServletException {
@@ -461,7 +555,25 @@ public class FrontController extends HttpServlet {
                 // method.invoke(controllerInstance);
 
                 Object returnValue = method.invoke(controllerInstance);
+                if (method.isAnnotationPresent(WebApi.class)) {
+                    response.setContentType("application/json; charset=UTF-8");
+                    PrintWriter out = response.getWriter();
 
+                    if (returnValue != null) {
+                        // Si la méthode renvoie un ModelView, on extrait ses données
+                        if (returnValue instanceof ModelView) {
+                            ModelView mv = (ModelView) returnValue;
+                            out.print(toJsonNative(mv.getData()));
+                        } else {
+                            out.print(toJsonNative(returnValue));
+                        }
+
+                    } else {
+                        out.print("{}");
+                    }
+                    out.flush();
+                    return;
+                }
                 if (returnValue instanceof ModelView) {
                     ModelView mv = (ModelView) returnValue;
 

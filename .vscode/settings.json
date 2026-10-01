@@ -3,7 +3,7 @@
         "spring0/src",
         "app-test/src"
     ],
-     "java.project.outputPath": ".vscode/out",
+    "java.project.outputPath": ".vscode/out",
     "java.project.referencedLibraries": [
         "spring0/lib/**/*.jar",
         "app-test/lib/**/*.jar",

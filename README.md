@@ -15,3 +15,10 @@ git checkout -b SpringMvc
 # aller dans app-tesst puis compile.sh 
 #executer ./compile.sh
 ```
+
+Bending 
+formulaire -> framework -> instance 
+
+
+getParameterNames[]
+Map controller save(get parameter ????  )
