@@ -18,7 +18,7 @@ git checkout -b SpringMvc
 
 Bending 
 formulaire -> framework -> instance 
-
+ 
 
 getParameterNames[]
-Map controller save(get parameter ????  )
+Map controller save(get parameter ????  ) bpas enconre  Objet type primitif comme faire ajoute

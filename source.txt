@@ -1,6 +1,6 @@
 ==================================================
 EXPORT COMPLET DU PROJET
-Date : mer. 30 sept 2026 08:28:08 EAT
+Date : jeu. 01 oct 2026 22:11:08 EAT
 Répertoire : /home/huhu/Documents/GitHub/SprintSpringMvcMrNaina
 ==================================================
 
@@ -53,93 +53,7 @@ public class TestController3 {
 ==================================================
 FICHIER : ./app-test/src/controller/TestController.java
 ==================================================
-// // package controller;
 
-// // import framework.annotation.Controller;
-// // import framework.annotation.Get;
-// // import framework.annotation.UrlMapping;
-// // import framework.util.ModelView;
-
-// // @Controller
-// // public class TestController {
-// //     @Get("/employe-list")
-// //     public ModelView listEmploye() {
-// //         ModelView mv = new ModelView("employe-list.jsp");
-        
-// //         // Ajout de données de test à transmettre à la JSP
-// //         mv.addItem("titre", "Liste des Employés");
-// //         mv.addItem("message", "Bienvenue sur la page de gestion des employés !");
-        
-// //         return mv;
-// //     }
-
-// //     @Get("/employe-add")
-// //     public void addEmploye() {
-// //     }
-
-// //     @Get("/andrana1")
-// //     public void andrana() {
-// //     }
-// //     @UrlMapping(value= "/andrana1",method ="POST")
-// //     public void andrana3() {
-// //     }
-
-// // }
-
-// package controller;
-
-// import framework.annotation.Controller;
-// import framework.annotation.Get;
-// import framework.annotation.UrlMapping;
-// import framework.util.DatabaseConnection;
-// import framework.util.ModelView;
-
-// import java.sql.Connection;
-// import java.sql.PreparedStatement;
-// import java.sql.ResultSet;
-// import java.util.ArrayList;
-// import java.util.List;
-
-// @Controller
-// public class TestController { 
-
-//     @Get("/employe-list")
-//     public ModelView listEmploye() {
-//         ModelView mv = new ModelView("employe-list.jsp");
-//         List<String> listeEmployes = new ArrayList<>();
-
-//         try (Connection conn = DatabaseConnection.getConnection();
-//              PreparedStatement stmt = conn.prepareStatement("SELECT nom, prenom, poste FROM employe");
-//              ResultSet rs = stmt.executeQuery()) {
-
-//             while (rs.next()) {
-//                 String emp = rs.getString("nom") + " " + rs.getString("prenom") + " (" + rs.getString("poste") + ")";
-//                 listeEmployes.add(emp);
-//             }
-
-//             mv.addItem("titre", "Liste des Employés");
-//             mv.addItem("message", "Données récupérées directement depuis MySQL !");
-//             mv.addItem("employes", listeEmployes);
-
-//         } catch (Exception e) {
-//             e.printStackTrace();
-//             mv.addItem("message", "Erreur lors de la connexion à la base de données : " + e.getMessage());
-//         }
-
-//         return mv;
-//     }
-
-//     @Get("/employe-add")
-//     public void addEmploye() {
-//     }
-
-//     @Get("/andrana1")
-//     public void andrana() {
-//     }
-//     @UrlMapping(value= "/andrana1",method ="POST")
-//     public void andrana3() {
-//     }
-// }
 
 package controller;
 
@@ -148,8 +62,12 @@ import framework.annotation.Get;
 import framework.annotation.WebApi;
 import framework.util.ModelView;
 
+import framework.annotation.UrlMapping;
+import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.example.entreprise.service.EmployeService;
 
 @Controller
 public class TestController { 
@@ -166,13 +84,39 @@ public class TestController {
 
     // Exemple 2 : Méthode renvoyant un ModelView transformé automatiquement en JSON
     @Get("/api/employes")
-    @WebApi
+    //@WebApi
     public ModelView getEmployesJson() {
         ModelView mv = new ModelView();
         mv.addItem("titre", "Liste API");
         mv.addItem("total", 2);
         return mv;
     }
+
+        @Get("/employe-list")
+    public ModelView listEmploye() {
+        ModelView mv = new ModelView("employe-list.jsp");
+        
+        mv.addItem("titre", "Liste des Employés");
+        mv.addItem("message", "Bienvenue sur la page de gestion des employés !");
+        List<String> employes = EmployeService.listEmployes();
+        mv.addItem("employes", employes);
+        
+        return mv;
+    }
+
+    @Get("/employe-add")
+    public void addEmploye() {
+    }
+
+    @Get("/andrana1")
+    public void andrana() {
+    }
+    @UrlMapping(value= "/andrana1",method ="POST")
+    public void andrana3() {
+    }
+
+
+
 }
 
 ==================================================
@@ -997,6 +941,318 @@ public class Utils {
         return output;
     }
 }
+
+
+==================================================
+FICHIER : ./springboot/pom.xml
+==================================================
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.4.5</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.example</groupId>
+    <artifactId>entreprise-springboot</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>entreprise-springboot</name>
+    <description>Application Spring Boot de gestion des employés</description>
+
+    <properties>
+        <java.version>21</java.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+
+==================================================
+FICHIER : ./springboot/src/main/java/com/example/entreprise/config/DatabaseConfig.java
+==================================================
+package com.example.entreprise.config;
+
+import com.example.entreprise.database.DatabaseConnection;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+
+import javax.sql.DataSource;
+
+@Configuration
+public class DatabaseConfig {
+
+    @Bean
+    @Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
+    public DatabaseConnection databaseConnection(DataSource dataSource) {
+        return new DatabaseConnection(dataSource);
+    }
+}
+
+==================================================
+FICHIER : ./springboot/src/main/java/com/example/entreprise/database/DatabaseConnection.java
+==================================================
+package com.example.entreprise.database;
+
+import org.springframework.jdbc.datasource.DataSourceUtils;
+
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
+
+public class DatabaseConnection {
+
+    private final DataSource connection;
+
+    public DatabaseConnection(DataSource connection) {
+        this.connection = connection;
+    }
+
+    public Connection getConnection() throws SQLException {
+        return DataSourceUtils.getConnection(connection);
+    }
+}
+
+==================================================
+FICHIER : ./springboot/src/main/java/com/example/entreprise/entity/Employe.java
+==================================================
+package com.example.entreprise.entity;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+import java.time.LocalDate;
+
+@Entity
+@Table(name = "employe")
+public class Employe {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+    @Column(nullable = false, length = 100)
+    private String nom;
+
+    @Column(nullable = false, length = 100)
+    private String prenom;
+
+    @Column(unique = true, length = 150)
+    private String email;
+
+    @Column(length = 100)
+    private String poste;
+
+    private Double salaire;
+
+    @Column(name = "date_embauche")
+    private LocalDate dateEmbauche;
+
+    protected Employe() {
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public String getNom() {
+        return nom;
+    }
+
+    public void setNom(String nom) {
+        this.nom = nom;
+    }
+
+    public String getPrenom() {
+        return prenom;
+    }
+
+    public void setPrenom(String prenom) {
+        this.prenom = prenom;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPoste() {
+        return poste;
+    }
+
+    public void setPoste(String poste) {
+        this.poste = poste;
+    }
+
+    public Double getSalaire() {
+        return salaire;
+    }
+
+    public void setSalaire(Double salaire) {
+        this.salaire = salaire;
+    }
+
+    public LocalDate getDateEmbauche() {
+        return dateEmbauche;
+    }
+
+    public void setDateEmbauche(LocalDate dateEmbauche) {
+        this.dateEmbauche = dateEmbauche;
+    }
+}
+
+==================================================
+FICHIER : ./springboot/src/main/java/com/example/entreprise/EntrepriseApplication.java
+==================================================
+package com.example.entreprise;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class EntrepriseApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(EntrepriseApplication.class, args);
+    }
+}
+
+==================================================
+FICHIER : ./springboot/src/main/java/com/example/entreprise/repository/EmployeRepository.java
+==================================================
+package com.example.entreprise.repository;
+
+import com.example.entreprise.entity.Employe;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface EmployeRepository extends JpaRepository<Employe, Integer> {
+}
+
+==================================================
+FICHIER : ./springboot/src/main/java/com/example/entreprise/service/EmployeService.java
+==================================================
+package com.example.entreprise.service;
+
+import com.example.entreprise.EntrepriseApplication;
+import com.example.entreprise.entity.Employe;
+import com.example.entreprise.repository.EmployeRepository;
+import org.springframework.boot.WebApplicationType;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class EmployeService {
+
+    private static volatile ConfigurableApplicationContext context;
+
+    private final EmployeRepository employeRepository;
+
+    public EmployeService(EmployeRepository employeRepository) {
+        this.employeRepository = employeRepository;
+    }
+
+    public List<Employe> findAll() {
+        return employeRepository.findAll();
+    }
+
+    public static List<String> listEmployes() {
+        return getInstance().findAll().stream()
+                .map(employe -> employe.getNom() + " " + employe.getPrenom()
+                        + " - " + employe.getPoste())
+                .collect(Collectors.toList());
+    }
+
+    private static EmployeService getInstance() {
+        if (context == null) {
+            synchronized (EmployeService.class) {
+                if (context == null) {
+                    context = new SpringApplicationBuilder(EntrepriseApplication.class)
+                            .web(WebApplicationType.NONE)
+                            .run();
+                }
+            }
+        }
+        return context.getBean(EmployeService.class);
+    }
+}
+
+==================================================
+FICHIER : ./springboot/src/main/resources/application.properties
+==================================================
+spring.datasource.url=${DB_URL:jdbc:mysql://localhost:3306/devdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+spring.datasource.username=${DB_USER:admin}
+spring.datasource.password=${DB_PASSWORD:admin123}
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+spring.jpa.hibernate.ddl-auto=none
+spring.jpa.open-in-view=false
+spring.jpa.show-sql=false
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
+
+==================================================
+FICHIER : ./springboot/target/classes/application.properties
+==================================================
+spring.datasource.url=${DB_URL:jdbc:mysql://localhost:3306/devdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+spring.datasource.username=${DB_USER:admin}
+spring.datasource.password=${DB_PASSWORD:admin123}
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+spring.jpa.hibernate.ddl-auto=none
+spring.jpa.open-in-view=false
+spring.jpa.show-sql=false
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
+
+==================================================
+FICHIER : ./springboot/target/maven-archiver/pom.properties
+==================================================
+artifactId=entreprise-springboot
+groupId=com.example
+version=0.0.1-SNAPSHOT
 
 
 ==================================================

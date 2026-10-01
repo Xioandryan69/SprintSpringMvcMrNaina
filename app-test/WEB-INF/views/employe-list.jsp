@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<!-- <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
 <!DOCTYPE html>
 <html>
@@ -54,5 +54,25 @@
 
     <br><hr>
     <p style="color: gray; font-size: 0.8em;">Rendu généré via WEB-INF/views/</p>
+</body>
+</html> -->
+
+
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Sprint 7 - Résultat</title>
+</head>
+<body>
+    <h1>Valeurs reçues par save(...)</h1>
+    <ul>
+        <li>nom : ${nom}</li>
+        <li>age : ${age}</li>
+        <li>salaire : ${salaire}</li>
+        <li>actif : ${actif}</li>
+    </ul>
+    <p><a href="${pageContext.request.contextPath}/employe-form">Retour au formulaire</a></p>
 </body>
 </html>

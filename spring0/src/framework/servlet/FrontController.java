@@ -22,6 +22,8 @@ import framework.util.UrlMethod;
 import java.util.HashMap;
 
 import framework.util.ModelView;
+import framework.util.ParamBinder;
+import java.lang.reflect.InvocationTargetException;
 import jakarta.servlet.RequestDispatcher;
 import java.lang.reflect.Field;
 import java.util.Map;
@@ -91,6 +93,17 @@ public class FrontController extends HttpServlet {
 
 
 
+    // Sprint 7 : Mapping ne garde que le nom de la méthode, or getDeclaredMethod(nom)
+    // sans types de paramètres échoue dès que la méthode a des paramètres (ex: save(...))
+    private Method findMethod(Class<?> clazz, String name) throws NoSuchMethodException {
+        for (Method candidate : clazz.getDeclaredMethods()) {
+            if (candidate.getName().equals(name)) {
+                return candidate;
+            }
+        }
+        throw new NoSuchMethodException("Méthode introuvable : " + clazz.getName() + "." + name + "()");
+    }
+
     @Override
     public void init() throws ServletException {
         // String basePackages = this.getInitParameter("base-package");
@@ -126,6 +139,9 @@ public class FrontController extends HttpServlet {
     private void handle(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
 
+        // Sprint 7 : à faire AVANT tout request.getParameter(...) pour les accents (POST)
+        request.setCharacterEncoding("UTF-8");
+
        // PrintWriter out = response.getWriter();
         // Récupérer le chemin tapé (Ex: /SprintSpringMvcMrNaina/employe-list -> on
         // extrait juste la fin)
@@ -139,12 +155,15 @@ public class FrontController extends HttpServlet {
             try {
                 Class<?> clazz = Class.forName(m.getClassName());
                 Object controllerInstance = clazz.getDeclaredConstructor().newInstance();
-                Method method = clazz.getDeclaredMethod(m.getMethod());
+                // Sprint 7 : la méthode peut avoir des paramètres, on la retrouve par son nom
+                Method method = findMethod(clazz, m.getMethod());
 
                 // Invocation de la méthode du contrôleur
                 // method.invoke(controllerInstance);
 
-                Object returnValue = method.invoke(controllerInstance);
+                // Sprint 7 : formulaire -> framework -> paramètres de la méthode
+                Object[] args = ParamBinder.buildArgs(method, request);
+                Object returnValue = method.invoke(controllerInstance, args);
                 if (method.isAnnotationPresent(WebApi.class)) {
                     response.setContentType("application/json; charset=UTF-8");
                     PrintWriter out = response.getWriter();
@@ -248,8 +267,10 @@ public class FrontController extends HttpServlet {
             } catch (Exception e) {
                 response.setContentType("text/html; charset=UTF-8");
                  PrintWriter out = response.getWriter();
-                out.println("<p style='color: red;'>Erreur lors de l'exécution : " + e.getMessage() + "</p>");
-                e.printStackTrace(out);
+                // invoke() enveloppe les exceptions du contrôleur dans InvocationTargetException
+                Throwable cause = (e instanceof InvocationTargetException && e.getCause() != null) ? e.getCause() : e;
+                out.println("<p style='color: red;'>Erreur lors de l'exécution : " + cause.getMessage() + "</p>");
+                cause.printStackTrace(out);
             }
         }  else {
             // Affichage de la page de débogage uniquement si aucune route ne matche

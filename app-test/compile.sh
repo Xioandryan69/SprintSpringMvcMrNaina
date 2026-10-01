@@ -4,7 +4,7 @@ TOMCAT_SOURCE="/home/huhu/S5/Mr Aina & Mr Rindra/apache-tomcat-11.0.21"
 # compiler les classes java
 rm -rf WEB-INF/classes/*
 mkdir -p WEB-INF/classes
-javac -cp "lib/*:WEB-INF/lib/*" -d WEB-INF/classes $(find . -name "*.java")
+javac -parameters -cp "lib/*:WEB-INF/lib/*" -d WEB-INF/classes $(find . -name "*.java")
 
 # Deployer vers tomcat # stop tomcat
 "$TOMCAT_SOURCE/bin/shutdown.sh"
