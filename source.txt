@@ -1,6 +1,6 @@
 ==================================================
 EXPORT COMPLET DU PROJET
-Date : jeu. 01 oct 2026 22:11:08 EAT
+Date : lun. 05 oct 2026 08:53:45 EAT
 Répertoire : /home/huhu/Documents/GitHub/SprintSpringMvcMrNaina
 ==================================================
 
@@ -53,8 +53,6 @@ public class TestController3 {
 ==================================================
 FICHIER : ./app-test/src/controller/TestController.java
 ==================================================
-
-
 package controller;
 
 import framework.annotation.Controller;
@@ -84,7 +82,7 @@ public class TestController {
 
     // Exemple 2 : Méthode renvoyant un ModelView transformé automatiquement en JSON
     @Get("/api/employes")
-    //@WebApi
+    @WebApi
     public ModelView getEmployesJson() {
         ModelView mv = new ModelView();
         mv.addItem("titre", "Liste API");
@@ -115,14 +113,57 @@ public class TestController {
     public void andrana3() {
     }
 
+    // ===== Sprint 7 : binding formulaire -> paramètres de méthode =====
+
+    @Get("/employe-form")
+    public ModelView showForm() {
+        return new ModelView("employe-form.jsp");
+    }
+
+    // Les noms des paramètres (nom, age, salaire, actif) doivent être
+    // identiques aux attributs name="" des champs du formulaire.
+    @UrlMapping(value = "/employe-save", method = "POST")
+    public ModelView save(String nom, int age, double salaire, boolean actif) {
+        ModelView mv = new ModelView("employe-result.jsp");
+        mv.addItem("nom", nom);
+        mv.addItem("age", age);
+        mv.addItem("salaire", salaire);
+        mv.addItem("actif", actif);
+        return mv;
+    }
+
 
 
 }
 
 ==================================================
-FICHIER : ./app-test/WEB-INF/views/employe-list.jsp
+FICHIER : ./app-test/WEB-INF/views/employe-form.jsp
 ==================================================
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Sprint 7 - Binding</title>
+</head>
+<body>
+    <h1>Sprint 7 - Formulaire</h1>
+
+    <form action="${pageContext.request.contextPath}/employe-save" method="post">
+        <p><label>Nom : <input type="text" name="nom"></label></p>
+        <p><label>Age : <input type="number" name="age"></label></p>
+        <p><label>Salaire : <input type="number" step="0.01" name="salaire"></label></p>
+        <p><label>Actif : <input type="checkbox" name="actif"></label></p>
+        <button type="submit">Enregistrer</button>
+    </form>
+</body>
+</html>
+
+
+==================================================
+FICHIER : ./app-test/WEB-INF/views/employe-list.jsp
+==================================================
+<!-- <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
 <!DOCTYPE html>
 <html>
@@ -179,7 +220,48 @@ FICHIER : ./app-test/WEB-INF/views/employe-list.jsp
     <br><hr>
     <p style="color: gray; font-size: 0.8em;">Rendu généré via WEB-INF/views/</p>
 </body>
+</html> -->
+
+
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Sprint 7 - Résultat</title>
+</head>
+<body>
+    <h1>Valeurs reçues par save(...)</h1>
+    <ul>
+        <li>nom : ${nom}</li>
+        <li>age : ${age}</li>
+        <li>salaire : ${salaire}</li>
+        <li>actif : ${actif}</li>
+    </ul>
+    <p><a href="${pageContext.request.contextPath}/employe-form">Retour au formulaire</a></p>
+</body>
 </html>
+
+==================================================
+FICHIER : ./app-test/WEB-INF/views/employe-result.jsp
+==================================================
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Employé enregistré</title>
+</head>
+<body>
+    <h1>Employé enregistré</h1>
+    <p>Nom : ${nom}</p>
+    <p>Âge : ${age}</p>
+    <p>Salaire : ${salaire}</p>
+    <p>Actif : ${actif}</p>
+    <p><a href="${pageContext.request.contextPath}/employe-form">Retour au formulaire</a></p>
+</body>
+</html>
+
 
 ==================================================
 FICHIER : ./app-test/WEB-INF/web.xml
@@ -376,6 +458,8 @@ import framework.util.UrlMethod;
 import java.util.HashMap;
 
 import framework.util.ModelView;
+import framework.util.ParamBinder;
+import java.lang.reflect.InvocationTargetException;
 import jakarta.servlet.RequestDispatcher;
 import java.lang.reflect.Field;
 import java.util.Map;
@@ -445,6 +529,15 @@ public class FrontController extends HttpServlet {
 
 
 
+    private Method findMethod(Class<?> clazz, String name) throws NoSuchMethodException {
+        for (Method candidate : clazz.getDeclaredMethods()) {
+            if (candidate.getName().equals(name)) {
+                return candidate;
+            }
+        }
+        throw new NoSuchMethodException("Méthode introuvable : " + clazz.getName() + "." + name + "()");
+    }
+
     @Override
     public void init() throws ServletException {
         // String basePackages = this.getInitParameter("base-package");
@@ -480,9 +573,8 @@ public class FrontController extends HttpServlet {
     private void handle(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
 
-       // PrintWriter out = response.getWriter();
-        // Récupérer le chemin tapé (Ex: /SprintSpringMvcMrNaina/employe-list -> on
-        // extrait juste la fin)
+        request.setCharacterEncoding("UTF-8");
+
         String pathInfo = request.getRequestURI().substring(request.getContextPath().length());
         String httpMethod = request.getMethod();
         UrlMethod requestKey = new UrlMethod(pathInfo, httpMethod);
@@ -493,12 +585,15 @@ public class FrontController extends HttpServlet {
             try {
                 Class<?> clazz = Class.forName(m.getClassName());
                 Object controllerInstance = clazz.getDeclaredConstructor().newInstance();
-                Method method = clazz.getDeclaredMethod(m.getMethod());
+                // Sprint 7 : la méthode peut avoir des paramètres, on la retrouve par son nom
+                Method method = findMethod(clazz, m.getMethod());
 
                 // Invocation de la méthode du contrôleur
                 // method.invoke(controllerInstance);
 
-                Object returnValue = method.invoke(controllerInstance);
+                // Sprint 7 : formulaire -> framework -> paramètres de la méthode
+                Object[] args = ParamBinder.buildArgs(method, request);
+                Object returnValue = method.invoke(controllerInstance, args);
                 if (method.isAnnotationPresent(WebApi.class)) {
                     response.setContentType("application/json; charset=UTF-8");
                     PrintWriter out = response.getWriter();
@@ -550,45 +645,12 @@ public class FrontController extends HttpServlet {
 
                 out.println("<p>Vous avez demandé : " + request.getRequestURI() + "</p>");
 
-                // Sprint 2
 
                 out.println("<h2>Scan des méthodes terminé !</h2>");
                 out.println("<p>URL demandée : <strong>" + pathInfo + "</strong></p>");
 
                 // Vérification si l'URL existe dans notre urlMapping
                 out.println("<h2>Vérification du Mapping :</h2>");
-                /*
-                 * if (urlMapping.containsKey(pathInfo)) {
-                 * Mapping m = urlMapping.get(pathInfo);
-                 * 
-                 * 
-                 * out.println("<p style='color: green;'><strong>Match trouvé !</strong></p>");
-                 * out.println("<ul>");
-                 * out.println("<li>Contrôleur : " + m.getClassName() + "</li>");
-                 * out.println("<li>Méthode associée : " + m.getMethod() + "()</li>");
-                 * out.println("</ul>");
-                 * 
-                 * } else {
-                 * out.
-                 * println("<p style='color: red;'>Aucune méthode associée à cette URL dans la HashMap.</p>"
-                 * );
-                 * }
-                 * 
-                 * // Affichage complet de la HashMap pour débogage
-                 * out.println("<h2>Contenu complet de la HashMap (urlMapping)</h2>");
-                 * out.println("<table border='1' cellpadding='5'>");
-                 * out.
-                 * println("<tr><th>URL / Clé</th><th>Classe associée</th><th>Méthode associée</th></tr>"
-                 * );
-                 * for (Map.Entry<String, Mapping> entry : urlMapping.entrySet()) {
-                 * out.println("<tr>");
-                 * out.println("<td>" + entry.getKey() + "</td>");
-                 * out.println("<td>" + entry.getValue().getClassName() + "</td>");
-                 * out.println("<td>" + entry.getValue().getMethod() + "()</td>");
-                 * out.println("</tr>");
-                 * }
-                 * out.println("</table>");
-                 */
 
                 out.println("<h2>Vérification du Mapping :</h2>");
 
@@ -602,8 +664,10 @@ public class FrontController extends HttpServlet {
             } catch (Exception e) {
                 response.setContentType("text/html; charset=UTF-8");
                  PrintWriter out = response.getWriter();
-                out.println("<p style='color: red;'>Erreur lors de l'exécution : " + e.getMessage() + "</p>");
-                e.printStackTrace(out);
+                // invoke() enveloppe les exceptions du contrôleur dans InvocationTargetException
+                Throwable cause = (e instanceof InvocationTargetException && e.getCause() != null) ? e.getCause() : e;
+                out.println("<p style='color: red;'>Erreur lors de l'exécution : " + cause.getMessage() + "</p>");
+                cause.printStackTrace(out);
             }
         }  else {
             // Affichage de la page de débogage uniquement si aucune route ne matche
@@ -645,7 +709,6 @@ public class FrontController extends HttpServlet {
         }
     }
 }
-
 
 ==================================================
 FICHIER : ./spring0/src/framework/util/DatabaseConnection.java
@@ -741,6 +804,91 @@ public class ModelView {
     // Fonction pour ajouter les données à envoyer à la vue
     public void addItem(String key, Object value) {
         this.data.put(key, value);
+    }
+}
+
+==================================================
+FICHIER : ./spring0/src/framework/util/ParamBinder.java
+==================================================
+package framework.util;
+
+import jakarta.servlet.http.HttpServletRequest;
+import java.lang.reflect.Array;
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+
+/**
+ * Sprint 7 : binding formulaire -> framework -> instance.
+ *
+ * Pour chaque paramètre de la méthode du contrôleur, on cherche dans la requête
+ * le champ de formulaire qui porte le MÊME NOM, puis on convertit la valeur
+ * (toujours reçue en String) vers le type du paramètre.
+ *
+ * Types gérés pour l'instant : String, types primitifs et leurs wrappers.
+ * Les objets (classes personnalisées) ne sont pas encore gérés.
+ *
+ * IMPORTANT : les contrôleurs doivent être compilés avec "javac -parameters",
+ * sinon Java ne garde pas les vrais noms (arg0, arg1...).
+ */
+public class ParamBinder {
+
+    public static Object[] buildArgs(Method method, HttpServletRequest request) throws Exception {
+        Parameter[] params = method.getParameters();
+        Object[] args = new Object[params.length];
+
+        for (int i = 0; i < params.length; i++) {
+            Parameter p = params[i];
+
+            if (!p.isNamePresent()) {
+                throw new Exception("Impossible de lire le nom du paramètre " + i + " de "
+                        + method.getName() + "(). Compilez les contrôleurs avec : javac -parameters");
+            }
+
+            String name = p.getName();
+            String raw = request.getParameter(name); // null si le champ n'existe pas dans la requête
+            args[i] = convert(raw, p.getType(), name);
+        }
+        return args;
+    }
+
+    private static Object convert(String raw, Class<?> type, String name) throws Exception {
+        // String : on renvoie la valeur telle quelle (null si absente)
+        if (type == String.class) {
+            return raw;
+        }
+
+        // Champ absent ou vide : 0 / false pour un primitif, null pour un wrapper
+        if (raw == null || raw.trim().isEmpty()) {
+            return type.isPrimitive() ? defaultValue(type) : null;
+        }
+
+        String value = raw.trim();
+
+        try {
+            if (type == int.class || type == Integer.class) return Integer.valueOf(value);
+            if (type == long.class || type == Long.class) return Long.valueOf(value);
+            if (type == double.class || type == Double.class) return Double.valueOf(value);
+            if (type == float.class || type == Float.class) return Float.valueOf(value);
+            if (type == short.class || type == Short.class) return Short.valueOf(value);
+            if (type == byte.class || type == Byte.class) return Byte.valueOf(value);
+            if (type == char.class || type == Character.class) return Character.valueOf(value.charAt(0));
+            if (type == boolean.class || type == Boolean.class) {
+                // une checkbox cochée envoie "on" par défaut
+                return value.equalsIgnoreCase("true") || value.equalsIgnoreCase("on")
+                        || value.equals("1") || value.equalsIgnoreCase("yes");
+            }
+        } catch (NumberFormatException e) {
+            throw new Exception("Paramètre '" + name + "' : la valeur \"" + value
+                    + "\" n'est pas valide pour le type " + type.getSimpleName());
+        }
+
+        throw new Exception("Paramètre '" + name + "' : type non géré (" + type.getName()
+                + "). Les objets seront traités dans un prochain sprint.");
+    }
+
+    // Valeur par défaut d'un primitif (int -> 0, boolean -> false, ...)
+    private static Object defaultValue(Class<?> primitiveType) {
+        return Array.get(Array.newInstance(primitiveType, 1), 0);
     }
 }
 

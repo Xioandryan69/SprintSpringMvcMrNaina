@@ -93,8 +93,6 @@ public class FrontController extends HttpServlet {
 
 
 
-    // Sprint 7 : Mapping ne garde que le nom de la méthode, or getDeclaredMethod(nom)
-    // sans types de paramètres échoue dès que la méthode a des paramètres (ex: save(...))
     private Method findMethod(Class<?> clazz, String name) throws NoSuchMethodException {
         for (Method candidate : clazz.getDeclaredMethods()) {
             if (candidate.getName().equals(name)) {
@@ -139,12 +137,8 @@ public class FrontController extends HttpServlet {
     private void handle(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
 
-        // Sprint 7 : à faire AVANT tout request.getParameter(...) pour les accents (POST)
         request.setCharacterEncoding("UTF-8");
 
-       // PrintWriter out = response.getWriter();
-        // Récupérer le chemin tapé (Ex: /SprintSpringMvcMrNaina/employe-list -> on
-        // extrait juste la fin)
         String pathInfo = request.getRequestURI().substring(request.getContextPath().length());
         String httpMethod = request.getMethod();
         UrlMethod requestKey = new UrlMethod(pathInfo, httpMethod);
@@ -215,45 +209,12 @@ public class FrontController extends HttpServlet {
 
                 out.println("<p>Vous avez demandé : " + request.getRequestURI() + "</p>");
 
-                // Sprint 2
 
                 out.println("<h2>Scan des méthodes terminé !</h2>");
                 out.println("<p>URL demandée : <strong>" + pathInfo + "</strong></p>");
 
                 // Vérification si l'URL existe dans notre urlMapping
                 out.println("<h2>Vérification du Mapping :</h2>");
-                /*
-                 * if (urlMapping.containsKey(pathInfo)) {
-                 * Mapping m = urlMapping.get(pathInfo);
-                 * 
-                 * 
-                 * out.println("<p style='color: green;'><strong>Match trouvé !</strong></p>");
-                 * out.println("<ul>");
-                 * out.println("<li>Contrôleur : " + m.getClassName() + "</li>");
-                 * out.println("<li>Méthode associée : " + m.getMethod() + "()</li>");
-                 * out.println("</ul>");
-                 * 
-                 * } else {
-                 * out.
-                 * println("<p style='color: red;'>Aucune méthode associée à cette URL dans la HashMap.</p>"
-                 * );
-                 * }
-                 * 
-                 * // Affichage complet de la HashMap pour débogage
-                 * out.println("<h2>Contenu complet de la HashMap (urlMapping)</h2>");
-                 * out.println("<table border='1' cellpadding='5'>");
-                 * out.
-                 * println("<tr><th>URL / Clé</th><th>Classe associée</th><th>Méthode associée</th></tr>"
-                 * );
-                 * for (Map.Entry<String, Mapping> entry : urlMapping.entrySet()) {
-                 * out.println("<tr>");
-                 * out.println("<td>" + entry.getKey() + "</td>");
-                 * out.println("<td>" + entry.getValue().getClassName() + "</td>");
-                 * out.println("<td>" + entry.getValue().getMethod() + "()</td>");
-                 * out.println("</tr>");
-                 * }
-                 * out.println("</table>");
-                 */
 
                 out.println("<h2>Vérification du Mapping :</h2>");
 
