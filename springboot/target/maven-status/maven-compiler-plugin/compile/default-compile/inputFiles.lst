@@ -1,0 +1,6 @@
+/home/huhu/Documents/GitHub/SprintSpringMvcMrNaina/springboot/src/main/java/com/example/entreprise/EntrepriseApplication.java
+/home/huhu/Documents/GitHub/SprintSpringMvcMrNaina/springboot/src/main/java/com/example/entreprise/config/DatabaseConfig.java
+/home/huhu/Documents/GitHub/SprintSpringMvcMrNaina/springboot/src/main/java/com/example/entreprise/database/DatabaseConnection.java
+/home/huhu/Documents/GitHub/SprintSpringMvcMrNaina/springboot/src/main/java/com/example/entreprise/entity/Employe.java
+/home/huhu/Documents/GitHub/SprintSpringMvcMrNaina/springboot/src/main/java/com/example/entreprise/repository/EmployeRepository.java
+/home/huhu/Documents/GitHub/SprintSpringMvcMrNaina/springboot/src/main/java/com/example/entreprise/service/EmployeService.java
