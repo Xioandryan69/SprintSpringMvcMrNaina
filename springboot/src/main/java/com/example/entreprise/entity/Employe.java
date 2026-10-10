@@ -34,7 +34,7 @@ public class Employe {
     @Column(name = "date_embauche")
     private LocalDate dateEmbauche;
 
-    protected Employe() {
+    public   Employe() {
     }
 
     public Integer getId() {

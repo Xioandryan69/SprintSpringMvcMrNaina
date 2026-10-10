@@ -1,6 +1,6 @@
 ==================================================
 EXPORT COMPLET DU PROJET
-Date : sam. 10 oct 2026 23:42:03 EAT
+Date : dim. 11 oct 2026 00:07:14 EAT
 Répertoire : /home/huhu/Documents/GitHub/SprintSpringMvcMrNaina
 ==================================================
 
@@ -119,6 +119,11 @@ public class TestController {
         return new ModelView("employe-form.jsp");
     }
 
+    @Get("/employe-form-objet")
+    public ModelView showForm1() {
+        return new ModelView("employe-form-objet.jsp");
+    }
+
 
     @UrlMapping(value = "/employe-save", method = "POST")
     public ModelView save(String nom, int age, double salaire, boolean actif) {
@@ -139,7 +144,18 @@ public class TestController {
         mv.addItem("competences", competences);
         return mv;
     }
-
+    /*
+    curl -X POST http://localhost:8080/employe-save-objet \
+     -d "nom=Rabe" \
+     -d "prenom=Jean" \
+     -d "email=jean.rabe@example.com" \
+     -d "poste=Développeur" \
+     -d "salaire=2500.00" \
+     -d "competences=Java" \
+     -d "competences=Spring" \
+     -d "competences=SQL"
+     
+     */
 
 
 }
@@ -217,25 +233,61 @@ FICHIER : ./app-test/WEB-INF/views/employe-form-objet.jsp
 
         <hr style="width: 40%; text-align: left;">
 
-        <!-- Paramètre List<String> competences (plusieurs inputs avec le même nom 'competences') -->
+    <!-- Section Liste dynamique pour les compétences -->
         <h3>Compétences</h3>
-        <div class="form-group">
-            <label>Compétence 1 :</label>
-            <input type="text" name="competences">
+        <div id="conteneur-competences">
+            <!-- Une première ligne par défaut -->
+            <div class="competence-ligne">
+                <input type="text" name="competences" placeholder="Ex: Java">
+                <button type="button" onclick="this.parentElement.remove()">Supprimer</button>
+            </div>
         </div>
-        <div class="form-group">
-            <label>Compétence 2 :</label>
-            <input type="text" name="competences">
-        </div>
-        <div class="form-group">
-            <label>Compétence 3 :</label>
-            <input type="text" name="competences">
-        </div>
+        
+        <button type="button" id="ajouter" style="margin-top: 10px;">+ Ajouter une compétence</button>
+
+        <br><br>
+        <button type="submit" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer;">
+            Enregistrer l'employé
+        </button>
 
         <br>
         <button type="submit" style="padding: 10px 20px;">Enregistrer l'employé</button>
     </form>
 </body>
+
+    <script>
+        const conteneur = document.getElementById('conteneur-competences');
+        const btnAjouter = document.getElementById('ajouter');
+
+        btnAjouter.addEventListener('click', () => {
+            // 1. Créer un conteneur pour la ligne (input + bouton supprimer)
+            const ligne = document.createElement('div');
+            ligne.className = 'competence-ligne';
+            ligne.style.margin = '8px 0';
+
+            // 2. Créer l'input avec le même name="competences" pour que le ParamBinder les regroupe dans la List
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.name = 'competences';
+            input.placeholder = 'Nouvelle compétence';
+            input.style.marginRight = '10px';
+
+            // 3. Créer le bouton Supprimer
+            const btnSupprimer = document.createElement('button');
+            btnSupprimer.type = 'button';
+            btnSupprimer.textContent = 'Supprimer';
+
+            // 4. Ajouter l'action de suppression au clic
+            btnSupprimer.addEventListener('click', () => {
+                ligne.remove(); // Supprime la ligne entière du DOM
+            });
+
+            // 5. Assembler les éléments
+            ligne.appendChild(input);
+            ligne.appendChild(btnSupprimer);
+            conteneur.appendChild(ligne);
+        });
+    </script>
 </html>
 
 ==================================================
@@ -366,7 +418,7 @@ FICHIER : ./app-test/WEB-INF/views/employe-result1.jsp
     </ul>
 
     <br>
-    <p><a href="${pageContext.request.contextPath}/employe-form">Retour au formulaire</a></p>
+    <p><a href="${pageContext.request.contextPath}/employe-form-objet">Retour au formulaire</a></p>
 </body>
 </html>
 
@@ -944,6 +996,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.time.LocalDate;
 import java.lang.reflect.*;
 import java.util.List;
 import java.util.ArrayList;
@@ -1001,7 +1054,11 @@ public class ParamBinder {
     }
 
     private static Object bindObject(Class<?> clazz, HttpServletRequest request, String prefix) throws Exception {
-        Object instance = clazz.getDeclaredConstructor().newInstance();
+
+        Constructor constructor=clazz.getDeclaredConstructor();
+        constructor.setAccessible(true);
+
+        Object instance = constructor.newInstance();
         Field[] fields = clazz.getDeclaredFields();
 
         for (Field field : fields) {
@@ -1016,7 +1073,7 @@ public class ParamBinder {
             }
 
             Class<?> fieldType = field.getType();
-            if (isPrimitiveOrWrapper(fieldType) || fieldType == String.class) {
+            if (isPrimitiveOrWrapper(fieldType) || fieldType == String.class || fieldType == LocalDate.class ) {
                 Object val = convert(raw, fieldType, fieldName);
                 field.set(instance, val);
             } else {
@@ -1095,6 +1152,8 @@ public class ParamBinder {
                 // une checkbox cochée envoie "on" par défaut
                 return value.equalsIgnoreCase("true") || value.equalsIgnoreCase("on")
                         || value.equals("1") || value.equalsIgnoreCase("yes");
+            }if (type == LocalDate.class) {
+                return LocalDate.parse(value);
             }
         } catch (NumberFormatException e) {
             throw new Exception("Paramètre '" + name + "' : la valeur \"" + value
@@ -1452,7 +1511,7 @@ public class Employe {
     @Column(name = "date_embauche")
     private LocalDate dateEmbauche;
 
-    protected Employe() {
+    public   Employe() {
     }
 
     public Integer getId() {
