@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.time.LocalDate;
 import java.lang.reflect.*;
 import java.util.List;
 import java.util.ArrayList;
@@ -61,7 +62,11 @@ public class ParamBinder {
     }
 
     private static Object bindObject(Class<?> clazz, HttpServletRequest request, String prefix) throws Exception {
-        Object instance = clazz.getDeclaredConstructor().newInstance();
+
+        Constructor constructor=clazz.getDeclaredConstructor();
+        constructor.setAccessible(true);
+
+        Object instance = constructor.newInstance();
         Field[] fields = clazz.getDeclaredFields();
 
         for (Field field : fields) {
@@ -76,7 +81,7 @@ public class ParamBinder {
             }
 
             Class<?> fieldType = field.getType();
-            if (isPrimitiveOrWrapper(fieldType) || fieldType == String.class) {
+            if (isPrimitiveOrWrapper(fieldType) || fieldType == String.class || fieldType == LocalDate.class ) {
                 Object val = convert(raw, fieldType, fieldName);
                 field.set(instance, val);
             } else {
@@ -155,6 +160,8 @@ public class ParamBinder {
                 // une checkbox cochée envoie "on" par défaut
                 return value.equalsIgnoreCase("true") || value.equalsIgnoreCase("on")
                         || value.equals("1") || value.equalsIgnoreCase("yes");
+            }if (type == LocalDate.class) {
+                return LocalDate.parse(value);
             }
         } catch (NumberFormatException e) {
             throw new Exception("Paramètre '" + name + "' : la valeur \"" + value

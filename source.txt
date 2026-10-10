@@ -1,6 +1,6 @@
 ==================================================
 EXPORT COMPLET DU PROJET
-Date : lun. 05 oct 2026 08:53:45 EAT
+Date : dim. 11 oct 2026 00:07:14 EAT
 Répertoire : /home/huhu/Documents/GitHub/SprintSpringMvcMrNaina
 ==================================================
 
@@ -66,11 +66,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.example.entreprise.service.EmployeService;
+import com.example.entreprise.entity.*;
 
 @Controller
 public class TestController { 
 
-    // Exemple 1 : Méthode renvoyant un objet/map en JSON
     @Get("/api/status")
     @WebApi
     public Map<String, Object> getStatusApi() {
@@ -80,7 +80,7 @@ public class TestController {
         return status;
     }
 
-    // Exemple 2 : Méthode renvoyant un ModelView transformé automatiquement en JSON
+  
     @Get("/api/employes")
     @WebApi
     public ModelView getEmployesJson() {
@@ -113,15 +113,18 @@ public class TestController {
     public void andrana3() {
     }
 
-    // ===== Sprint 7 : binding formulaire -> paramètres de méthode =====
 
     @Get("/employe-form")
     public ModelView showForm() {
         return new ModelView("employe-form.jsp");
     }
 
-    // Les noms des paramètres (nom, age, salaire, actif) doivent être
-    // identiques aux attributs name="" des champs du formulaire.
+    @Get("/employe-form-objet")
+    public ModelView showForm1() {
+        return new ModelView("employe-form-objet.jsp");
+    }
+
+
     @UrlMapping(value = "/employe-save", method = "POST")
     public ModelView save(String nom, int age, double salaire, boolean actif) {
         ModelView mv = new ModelView("employe-result.jsp");
@@ -132,6 +135,27 @@ public class TestController {
         return mv;
     }
 
+
+    @UrlMapping(value = "/employe-save-objet", method = "POST")
+    public ModelView saveEmploye(Employe employe, List<String> competences, Map<String, Object> allParams) {
+        ModelView mv = new ModelView("employe-result1.jsp");
+        // L'objet 'employe' est automatiquement instancié et rempli à partir des champs du formulaire
+        mv.addItem("employe", employe);
+        mv.addItem("competences", competences);
+        return mv;
+    }
+    /*
+    curl -X POST http://localhost:8080/employe-save-objet \
+     -d "nom=Rabe" \
+     -d "prenom=Jean" \
+     -d "email=jean.rabe@example.com" \
+     -d "poste=Développeur" \
+     -d "salaire=2500.00" \
+     -d "competences=Java" \
+     -d "competences=Spring" \
+     -d "competences=SQL"
+     
+     */
 
 
 }
@@ -159,6 +183,112 @@ FICHIER : ./app-test/WEB-INF/views/employe-form.jsp
 </body>
 </html>
 
+
+==================================================
+FICHIER : ./app-test/WEB-INF/views/employe-form-objet.jsp
+==================================================
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Formulaire - Ajout d'Employé (Objet)</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: inline-block; width: 150px; font-weight: bold; }
+        input[type="text"], input[type="number"], input[type="date"] { padding: 5px; width: 250px; }
+    </style>
+</head>
+<body>
+    <h1>Formulaire d'enregistrement (Objet & Liste)</h1>
+
+    <form action="${pageContext.request.contextPath}/employe-save-objet" method="post">
+        
+        <!-- Attributs de la classe Employe -->
+        <div class="form-group">
+            <label>Nom :</label>
+            <input type="text" name="nom" required>
+        </div>
+        <div class="form-group">
+            <label>Prénom :</label>
+            <input type="text" name="prenom" required>
+        </div>
+        <div class="form-group">
+            <label>Email :</label>
+            <input type="text" name="email">
+        </div>
+        <div class="form-group">
+            <label>Poste :</label>
+            <input type="text" name="poste">
+        </div>
+        <div class="form-group">
+            <label>Salaire :</label>
+            <input type="number" step="0.01" name="salaire">
+        </div>
+        <div class="form-group">
+            <label>Date d'embauche :</label>
+            <input type="date" name="dateEmbauche">
+        </div>
+
+        <hr style="width: 40%; text-align: left;">
+
+    <!-- Section Liste dynamique pour les compétences -->
+        <h3>Compétences</h3>
+        <div id="conteneur-competences">
+            <!-- Une première ligne par défaut -->
+            <div class="competence-ligne">
+                <input type="text" name="competences" placeholder="Ex: Java">
+                <button type="button" onclick="this.parentElement.remove()">Supprimer</button>
+            </div>
+        </div>
+        
+        <button type="button" id="ajouter" style="margin-top: 10px;">+ Ajouter une compétence</button>
+
+        <br><br>
+        <button type="submit" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer;">
+            Enregistrer l'employé
+        </button>
+
+        <br>
+        <button type="submit" style="padding: 10px 20px;">Enregistrer l'employé</button>
+    </form>
+</body>
+
+    <script>
+        const conteneur = document.getElementById('conteneur-competences');
+        const btnAjouter = document.getElementById('ajouter');
+
+        btnAjouter.addEventListener('click', () => {
+            // 1. Créer un conteneur pour la ligne (input + bouton supprimer)
+            const ligne = document.createElement('div');
+            ligne.className = 'competence-ligne';
+            ligne.style.margin = '8px 0';
+
+            // 2. Créer l'input avec le même name="competences" pour que le ParamBinder les regroupe dans la List
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.name = 'competences';
+            input.placeholder = 'Nouvelle compétence';
+            input.style.marginRight = '10px';
+
+            // 3. Créer le bouton Supprimer
+            const btnSupprimer = document.createElement('button');
+            btnSupprimer.type = 'button';
+            btnSupprimer.textContent = 'Supprimer';
+
+            // 4. Ajouter l'action de suppression au clic
+            btnSupprimer.addEventListener('click', () => {
+                ligne.remove(); // Supprime la ligne entière du DOM
+            });
+
+            // 5. Assembler les éléments
+            ligne.appendChild(input);
+            ligne.appendChild(btnSupprimer);
+            conteneur.appendChild(ligne);
+        });
+    </script>
+</html>
 
 ==================================================
 FICHIER : ./app-test/WEB-INF/views/employe-list.jsp
@@ -239,6 +369,56 @@ FICHIER : ./app-test/WEB-INF/views/employe-list.jsp
         <li>actif : ${actif}</li>
     </ul>
     <p><a href="${pageContext.request.contextPath}/employe-form">Retour au formulaire</a></p>
+</body>
+</html>
+
+==================================================
+FICHIER : ./app-test/WEB-INF/views/employe-result1.jsp
+==================================================
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="java.util.List" %>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Résultat - Employé & Objet</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; }
+        ul { background: #f9f9f9; padding: 15px; border: 1px solid #ddd; width: 50%; }
+        li { margin-bottom: 8px; }
+    </style>
+</head>
+<body>
+    <h1>Détails de l'employé enregistré (Objet)</h1>
+
+    <h3>Informations personnelles :</h3>
+    <ul>
+        <li><strong>Nom :</strong> ${employe.nom}</li>
+        <li><strong>Prénom :</strong> ${employe.prenom}</li>
+        <li><strong>Email :</strong> ${employe.email}</li>
+        <li><strong>Poste :</strong> ${employe.poste}</li>
+        <li><strong>Salaire :</strong> ${employe.salaire}</li>
+        <li><strong>Date d'embauche :</strong> ${employe.dateEmbauche}</li>
+    </ul>
+
+    <h3>Compétences :</h3>
+    <ul>
+        <% 
+            List<String> comps = (List<String>) request.getAttribute("competences");
+            if (comps != null && !comps.isEmpty()) {
+                for (String c : comps) {
+        %>
+            <li><%= c %></li>
+        <% 
+                }
+            } else { 
+        %>
+            <li>Aucune compétence sélectionnée</li>
+        <% } %>
+    </ul>
+
+    <br>
+    <p><a href="${pageContext.request.contextPath}/employe-form-objet">Retour au formulaire</a></p>
 </body>
 </html>
 
@@ -816,20 +996,15 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.time.LocalDate;
+import java.lang.reflect.*;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Vector;
+import java.util.Map;
+import java.util.HashMap;
 
-/**
- * Sprint 7 : binding formulaire -> framework -> instance.
- *
- * Pour chaque paramètre de la méthode du contrôleur, on cherche dans la requête
- * le champ de formulaire qui porte le MÊME NOM, puis on convertit la valeur
- * (toujours reçue en String) vers le type du paramètre.
- *
- * Types gérés pour l'instant : String, types primitifs et leurs wrappers.
- * Les objets (classes personnalisées) ne sont pas encore gérés.
- *
- * IMPORTANT : les contrôleurs doivent être compilés avec "javac -parameters",
- * sinon Java ne garde pas les vrais noms (arg0, arg1...).
- */
+
 public class ParamBinder {
 
     public static Object[] buildArgs(Method method, HttpServletRequest request) throws Exception {
@@ -845,14 +1020,115 @@ public class ParamBinder {
             }
 
             String name = p.getName();
-            String raw = request.getParameter(name); // null si le champ n'existe pas dans la requête
-            args[i] = convert(raw, p.getType(), name);
+            Class<?> type = p.getType();
+
+            if (HttpServletRequest.class.isAssignableFrom(type)) {
+                args[i] = request;
+                continue;
+            }
+
+            if (java.util.List.class.isAssignableFrom(type) || java.util.Vector.class.isAssignableFrom(type)) {
+                args[i] = bindList(p, request, name);
+                continue;
+            }
+
+            if (java.util.Map.class.isAssignableFrom(type)) {
+                args[i] = bindMap(request);
+                continue;
+            }
+            
+            if (isPrimitiveOrWrapper(type) || type == String.class) {
+                String raw = request.getParameter(name);
+                args[i] = convert(raw, type, name);
+                continue;
+            }
+            args[i] = bindObject(type, request, name);
         }
         return args;
     }
 
+    private static boolean isPrimitiveOrWrapper(Class<?> type) {
+        return type.isPrimitive() || type == Integer.class || type == Long.class
+                || type == Double.class || type == Float.class || type == Boolean.class
+                || type == Short.class || type == Byte.class || type == Character.class;
+    }
+
+    private static Object bindObject(Class<?> clazz, HttpServletRequest request, String prefix) throws Exception {
+
+        Constructor constructor=clazz.getDeclaredConstructor();
+        constructor.setAccessible(true);
+
+        Object instance = constructor.newInstance();
+        Field[] fields = clazz.getDeclaredFields();
+
+        for (Field field : fields) {
+            field.setAccessible(true);
+            String fieldName = field.getName();
+            
+            // Recherche du paramètre (ex: "nom" ou préfixé "employe.nom")
+            String paramName = (prefix != null && !prefix.isEmpty()) ? prefix + "." + fieldName : fieldName;
+            String raw = request.getParameter(paramName);
+            if (raw == null) {
+                raw = request.getParameter(fieldName); // repli sur le nom simple du champ
+            }
+
+            Class<?> fieldType = field.getType();
+            if (isPrimitiveOrWrapper(fieldType) || fieldType == String.class || fieldType == LocalDate.class ) {
+                Object val = convert(raw, fieldType, fieldName);
+                field.set(instance, val);
+            } else {
+                // Objet imbriqué
+                Object nestedObj = bindObject(fieldType, request, fieldName);
+                field.set(instance, nestedObj);
+            }
+        }
+        return instance;
+    }
+    private static Object bindList(Parameter p, HttpServletRequest request, String name) throws Exception {
+        String[] values = request.getParameterValues(name);
+        List<Object> list = new ArrayList<>();
+        Vector<Object> vector = new Vector<>();
+        boolean isVector = Vector.class.isAssignableFrom(p.getType());
+
+        if (values != null) {
+            // Récupérer le type générique (ex: List<Integer> -> Integer.class)
+            Class<?> genericType = String.class;
+            Type genericParamType = p.getParameterizedType();
+            if (genericParamType instanceof ParameterizedType) {
+                ParameterizedType pt = (ParameterizedType) genericParamType;
+                Type actualType = pt.getActualTypeArguments()[0];
+                if (actualType instanceof Class) {
+                    genericType = (Class<?>) actualType;
+                }
+            }
+
+            for (String val : values) {
+                Object converted = convert(val, genericType, name);
+                if (isVector) {
+                    vector.add(converted);
+                } else {
+                    list.add(converted);
+                }
+            }
+        }
+        return isVector ? vector : list;
+    }
+
+    private static Map<String, Object> bindMap(HttpServletRequest request) {
+        Map<String, Object> map = new HashMap<>();
+        Map<String, String[]> parameterMap = request.getParameterMap();
+        for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
+            String[] vals = entry.getValue();
+            if (vals.length == 1) {
+                map.put(entry.getKey(), vals[0]);
+            } else {
+                map.put(entry.getKey(), vals);
+            }
+        }
+        return map;
+    }
+
     private static Object convert(String raw, Class<?> type, String name) throws Exception {
-        // String : on renvoie la valeur telle quelle (null si absente)
         if (type == String.class) {
             return raw;
         }
@@ -876,6 +1152,8 @@ public class ParamBinder {
                 // une checkbox cochée envoie "on" par défaut
                 return value.equalsIgnoreCase("true") || value.equalsIgnoreCase("on")
                         || value.equals("1") || value.equalsIgnoreCase("yes");
+            }if (type == LocalDate.class) {
+                return LocalDate.parse(value);
             }
         } catch (NumberFormatException e) {
             throw new Exception("Paramètre '" + name + "' : la valeur \"" + value
@@ -886,7 +1164,6 @@ public class ParamBinder {
                 + "). Les objets seront traités dans un prochain sprint.");
     }
 
-    // Valeur par défaut d'un primitif (int -> 0, boolean -> false, ...)
     private static Object defaultValue(Class<?> primitiveType) {
         return Array.get(Array.newInstance(primitiveType, 1), 0);
     }
@@ -1234,7 +1511,7 @@ public class Employe {
     @Column(name = "date_embauche")
     private LocalDate dateEmbauche;
 
-    protected Employe() {
+    public   Employe() {
     }
 
     public Integer getId() {

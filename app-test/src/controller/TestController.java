@@ -35,7 +35,7 @@ public class TestController {
         return mv;
     }
 
-        @Get("/employe-list")
+    @Get("/employe-list")
     public ModelView listEmploye() {
         ModelView mv = new ModelView("employe-list.jsp");
         
@@ -64,6 +64,18 @@ public class TestController {
         return new ModelView("employe-form.jsp");
     }
 
+    @Get("/employe-form-objet")
+    public ModelView showForm1() {
+        return new ModelView("employe-form-objet.jsp");
+    }
+
+
+
+    @Get("/employe-form-vector-map")
+    public ModelView showForm2() {
+        return new ModelView("employe-form-vector-map.jsp");
+    }
+
 
     @UrlMapping(value = "/employe-save", method = "POST")
     public ModelView save(String nom, int age, double salaire, boolean actif) {
@@ -85,6 +97,25 @@ public class TestController {
         return mv;
     }
 
+    @UrlMapping(value = "/employe-save-vector-map", method = "POST")
+    public ModelView saveVectorMap(java.util.Vector<String> competencesVector, Map<String, Object> allParams) {
+        ModelView mv = new ModelView("employe-result2.jsp");
+        mv.addItem("competencesVector", competencesVector);
+        mv.addItem("metaData", allParams);
+        return mv;
+    }
+    /*
+    curl -X POST http://localhost:8080/employe-save-objet \
+     -d "nom=Rabe" \
+     -d "prenom=Jean" \
+     -d "email=jean.rabe@example.com" \
+     -d "poste=Développeur" \
+     -d "salaire=2500.00" \
+     -d "competences=Java" \
+     -d "competences=Spring" \
+     -d "competences=SQL"
+     
+     */
 
 
 }
