@@ -4,20 +4,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.lang.reflect.*;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Vector;
+import java.util.Map;
+import java.util.HashMap;
 
-/**
- * Sprint 7 : binding formulaire -> framework -> instance.
- *
- * Pour chaque paramètre de la méthode du contrôleur, on cherche dans la requête
- * le champ de formulaire qui porte le MÊME NOM, puis on convertit la valeur
- * (toujours reçue en String) vers le type du paramètre.
- *
- * Types gérés pour l'instant : String, types primitifs et leurs wrappers.
- * Les objets (classes personnalisées) ne sont pas encore gérés.
- *
- * IMPORTANT : les contrôleurs doivent être compilés avec "javac -parameters",
- * sinon Java ne garde pas les vrais noms (arg0, arg1...).
- */
+
 public class ParamBinder {
 
     public static Object[] buildArgs(Method method, HttpServletRequest request) throws Exception {
@@ -33,14 +27,111 @@ public class ParamBinder {
             }
 
             String name = p.getName();
-            String raw = request.getParameter(name); // null si le champ n'existe pas dans la requête
-            args[i] = convert(raw, p.getType(), name);
+            Class<?> type = p.getType();
+
+            if (HttpServletRequest.class.isAssignableFrom(type)) {
+                args[i] = request;
+                continue;
+            }
+
+            if (java.util.List.class.isAssignableFrom(type) || java.util.Vector.class.isAssignableFrom(type)) {
+                args[i] = bindList(p, request, name);
+                continue;
+            }
+
+            if (java.util.Map.class.isAssignableFrom(type)) {
+                args[i] = bindMap(request);
+                continue;
+            }
+            
+            if (isPrimitiveOrWrapper(type) || type == String.class) {
+                String raw = request.getParameter(name);
+                args[i] = convert(raw, type, name);
+                continue;
+            }
+            args[i] = bindObject(type, request, name);
         }
         return args;
     }
 
+    private static boolean isPrimitiveOrWrapper(Class<?> type) {
+        return type.isPrimitive() || type == Integer.class || type == Long.class
+                || type == Double.class || type == Float.class || type == Boolean.class
+                || type == Short.class || type == Byte.class || type == Character.class;
+    }
+
+    private static Object bindObject(Class<?> clazz, HttpServletRequest request, String prefix) throws Exception {
+        Object instance = clazz.getDeclaredConstructor().newInstance();
+        Field[] fields = clazz.getDeclaredFields();
+
+        for (Field field : fields) {
+            field.setAccessible(true);
+            String fieldName = field.getName();
+            
+            // Recherche du paramètre (ex: "nom" ou préfixé "employe.nom")
+            String paramName = (prefix != null && !prefix.isEmpty()) ? prefix + "." + fieldName : fieldName;
+            String raw = request.getParameter(paramName);
+            if (raw == null) {
+                raw = request.getParameter(fieldName); // repli sur le nom simple du champ
+            }
+
+            Class<?> fieldType = field.getType();
+            if (isPrimitiveOrWrapper(fieldType) || fieldType == String.class) {
+                Object val = convert(raw, fieldType, fieldName);
+                field.set(instance, val);
+            } else {
+                // Objet imbriqué
+                Object nestedObj = bindObject(fieldType, request, fieldName);
+                field.set(instance, nestedObj);
+            }
+        }
+        return instance;
+    }
+    private static Object bindList(Parameter p, HttpServletRequest request, String name) throws Exception {
+        String[] values = request.getParameterValues(name);
+        List<Object> list = new ArrayList<>();
+        Vector<Object> vector = new Vector<>();
+        boolean isVector = Vector.class.isAssignableFrom(p.getType());
+
+        if (values != null) {
+            // Récupérer le type générique (ex: List<Integer> -> Integer.class)
+            Class<?> genericType = String.class;
+            Type genericParamType = p.getParameterizedType();
+            if (genericParamType instanceof ParameterizedType) {
+                ParameterizedType pt = (ParameterizedType) genericParamType;
+                Type actualType = pt.getActualTypeArguments()[0];
+                if (actualType instanceof Class) {
+                    genericType = (Class<?>) actualType;
+                }
+            }
+
+            for (String val : values) {
+                Object converted = convert(val, genericType, name);
+                if (isVector) {
+                    vector.add(converted);
+                } else {
+                    list.add(converted);
+                }
+            }
+        }
+        return isVector ? vector : list;
+    }
+
+    private static Map<String, Object> bindMap(HttpServletRequest request) {
+        Map<String, Object> map = new HashMap<>();
+        Map<String, String[]> parameterMap = request.getParameterMap();
+        for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
+            String[] vals = entry.getValue();
+            if (vals.length == 1) {
+                map.put(entry.getKey(), vals[0]);
+            } else {
+                map.put(entry.getKey(), vals);
+            }
+        }
+        return map;
+    }
+
     private static Object convert(String raw, Class<?> type, String name) throws Exception {
-        // String : on renvoie la valeur telle quelle (null si absente)
         if (type == String.class) {
             return raw;
         }
@@ -74,7 +165,6 @@ public class ParamBinder {
                 + "). Les objets seront traités dans un prochain sprint.");
     }
 
-    // Valeur par défaut d'un primitif (int -> 0, boolean -> false, ...)
     private static Object defaultValue(Class<?> primitiveType) {
         return Array.get(Array.newInstance(primitiveType, 1), 0);
     }

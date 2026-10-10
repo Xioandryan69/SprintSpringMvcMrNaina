@@ -11,11 +11,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.example.entreprise.service.EmployeService;
+import com.example.entreprise.entity.*;
 
 @Controller
 public class TestController { 
 
-    // Exemple 1 : Méthode renvoyant un objet/map en JSON
     @Get("/api/status")
     @WebApi
     public Map<String, Object> getStatusApi() {
@@ -25,7 +25,7 @@ public class TestController {
         return status;
     }
 
-    // Exemple 2 : Méthode renvoyant un ModelView transformé automatiquement en JSON
+  
     @Get("/api/employes")
     @WebApi
     public ModelView getEmployesJson() {
@@ -58,15 +58,13 @@ public class TestController {
     public void andrana3() {
     }
 
-    // ===== Sprint 7 : binding formulaire -> paramètres de méthode =====
 
     @Get("/employe-form")
     public ModelView showForm() {
         return new ModelView("employe-form.jsp");
     }
 
-    // Les noms des paramètres (nom, age, salaire, actif) doivent être
-    // identiques aux attributs name="" des champs du formulaire.
+
     @UrlMapping(value = "/employe-save", method = "POST")
     public ModelView save(String nom, int age, double salaire, boolean actif) {
         ModelView mv = new ModelView("employe-result.jsp");
@@ -74,6 +72,16 @@ public class TestController {
         mv.addItem("age", age);
         mv.addItem("salaire", salaire);
         mv.addItem("actif", actif);
+        return mv;
+    }
+
+
+    @UrlMapping(value = "/employe-save-objet", method = "POST")
+    public ModelView saveEmploye(Employe employe, List<String> competences, Map<String, Object> allParams) {
+        ModelView mv = new ModelView("employe-result1.jsp");
+        // L'objet 'employe' est automatiquement instancié et rempli à partir des champs du formulaire
+        mv.addItem("employe", employe);
+        mv.addItem("competences", competences);
         return mv;
     }
 
