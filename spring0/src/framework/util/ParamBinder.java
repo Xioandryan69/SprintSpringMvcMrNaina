@@ -31,6 +31,11 @@ public class ParamBinder {
                 args[i] = request;
                 continue;
             }
+            // Dans ParamBinder.java, ajoutez la gestion du type FileUpload
+            if (type == FileUpload.class) {
+                args[i] = bindFile(request, name);
+                continue;
+            }
 
             if (java.util.List.class.isAssignableFrom(type) || java.util.Vector.class.isAssignableFrom(type)) {
                 args[i] = bindList(p, request, name);
@@ -194,5 +199,41 @@ public class ParamBinder {
 
     private static Object defaultValue(Class<?> primitiveType) {
         return Array.get(Array.newInstance(primitiveType, 1), 0);
+    }
+
+    private static FileUpload bindFile(HttpServletRequest request, String name) throws Exception {
+    jakarta.servlet.http.Part filePart = request.getPart(name);
+    if (filePart == null || filePart.getSize() == 0) {
+        return null;
+    }
+
+    String fileName = extractFileName(filePart);
+    byte[] bytes = filePart.getInputStream().readAllBytes();
+    long size = filePart.getSize();
+
+    String uploadDir = (String) request.getServletContext().getAttribute("uploadDirectory");
+    
+    String savedPath = null;
+    if (uploadDir != null) {
+      
+        java.io.File dir = new java.io.File(uploadDir);
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+        savedPath = uploadDir + java.io.File.separator + fileName;
+        java.nio.file.Files.write(java.nio.file.Paths.get(savedPath), bytes);
+    }
+    return new FileUpload(fileName, savedPath, bytes, size);
+
+}
+
+    private static String extractFileName(jakarta.servlet.http.Part part) {
+        String contentDisp = part.getHeader("content-disposition");
+        for (String s : contentDisp.split(";")) {
+            if (s.trim().startsWith("filename")) {
+                return s.substring(s.indexOf("=") + 2, s.length() - 1);
+            }
+        }
+        return "file";
     }
 }

@@ -1,6 +1,6 @@
 ==================================================
 EXPORT COMPLET DU PROJET
-Date : mer. 14 oct. 2026 10:37:21 EAT
+Date : mer. 14 oct. 2026 11:26:16 EAT
 Répertoire : /home/andrianandrainy/S5/GitHub/SprintSpringMvcMrNaina
 ==================================================
 
@@ -58,6 +58,7 @@ package controller;
 import framework.annotation.Controller;
 import framework.annotation.Get;
 import framework.annotation.WebApi;
+import framework.util.FileUpload;
 import framework.util.ModelView;
 
 import framework.annotation.UrlMapping;
@@ -158,6 +159,20 @@ public class TestController {
         mv.addItem("competencesVector", competencesVector);
         mv.addItem("metaData", allParams);
         return mv;
+    }
+
+    @UrlMapping(value = "/upload-save", method = "POST")
+    public ModelView saveFile(String description, FileUpload monFichier) {
+        ModelView mv = new ModelView("result-upload.jsp");
+        mv.addItem("description", description);
+        mv.addItem("nomFichier", monFichier.getName());
+        mv.addItem("tailleFichier", monFichier.getSize());
+        return mv;
+    }
+
+    @Get("/upload-form")
+    public ModelView showUploadForm() {
+        return new ModelView("upload-form.jsp");
     }
     /*
     curl -X POST http://localhost:8080/employe-save-objet \
@@ -554,6 +569,70 @@ FICHIER : ./app-test/WEB-INF/views/employe-result.jsp
 
 
 ==================================================
+FICHIER : ./app-test/WEB-INF/views/result-upload.jsp
+==================================================
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Sprint 8 - Résultat de l'Upload</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; }
+        ul { background: #f9f9f9; padding: 15px; border: 1px solid #ddd; width: 50%; }
+        li { margin-bottom: 8px; }
+    </style>
+</head>
+<body>
+    <h1>Fichier uploadé avec succès !</h1>
+
+    <h3>Détails :</h3>
+    <ul>
+        <li><strong>Description :</strong> ${description}</li>
+        <li><strong>Nom du fichier :</strong> ${nomFichier}</li>
+        <li><strong>Taille du fichier :</strong> ${tailleFichier} octets</li>
+    </ul>
+
+    <br>
+    <p><a href="${pageContext.request.contextPath}/upload-form">Retour au formulaire d'upload</a></p>
+</body>
+</html>
+
+==================================================
+FICHIER : ./app-test/WEB-INF/views/upload-form.jsp
+==================================================
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Sprint 8 - Upload de fichier</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: inline-block; width: 150px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Sprint 8 - Formulaire d'upload</h1>
+
+    <form action="${pageContext.request.contextPath}/upload-save" method="post" enctype="multipart/form-data">
+        <div class="form-group">
+            <label>Description :</label>
+            <input type="text" name="description" placeholder="Ex: Photo de profil">
+        </div>
+        <div class="form-group">
+            <label>Fichier :</label>
+            <input type="file" name="monFichier">
+        </div>
+        <button type="submit" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer;">
+            Uploader le fichier
+        </button>
+    </form>
+</body>
+</html>
+
+==================================================
 FICHIER : ./app-test/WEB-INF/web.xml
 ==================================================
 <?xml version="1.0" encoding="UTF-8"?>
@@ -575,6 +654,12 @@ FICHIER : ./app-test/WEB-INF/web.xml
             <param-name>base-package</param-name>
             <param-value>controller,controller1</param-value>
         </init-param> -->
+
+        <multipart-config>
+            <max-file-size>10485760</max-file-size> <!-- 10 Mo max -->
+            <max-request-size>20971520</max-request-size> <!-- 20 Mo max -->
+            <file-size-threshold>0</file-size-threshold>
+        </multipart-config>
 
     </servlet>
 
@@ -1029,6 +1114,53 @@ public class DatabaseConnection {
 }
 
 ==================================================
+FICHIER : ./spring0/src/framework/util/FileUpload.java
+==================================================
+package framework.util;
+public class FileUpload 
+{
+    
+    private String name;
+    private String path;
+    private byte[] bytes;
+    private long size;
+
+    public FileUpload(String name, String path, byte[] bytes, long size) {
+        this.name = name;
+        this.path = path;
+        this.bytes = bytes;
+        this.size = size;
+    }
+
+    
+    public String getName() {
+        return name;
+    }
+    public void setName(String name) {
+        this.name = name;
+    }
+    public String getPath() {
+        return path;
+    }
+    public void setPath(String path) {
+        this.path = path;
+    }
+    public byte[] getBytes() {
+        return bytes;
+    }
+    public void setBytes(byte[] bytes) {
+        this.bytes = bytes;
+    }
+    public long getSize() {
+        return size;
+    }
+    public void setSize(long size) {
+        this.size = size;
+    }
+}
+
+
+==================================================
 FICHIER : ./spring0/src/framework/util/Mapping.java
 ==================================================
 package framework.util;
@@ -1131,6 +1263,11 @@ public class ParamBinder {
 
             if (HttpServletRequest.class.isAssignableFrom(type)) {
                 args[i] = request;
+                continue;
+            }
+            // Dans ParamBinder.java, ajoutez la gestion du type FileUpload
+            if (type == FileUpload.class) {
+                args[i] = bindFile(request, name);
                 continue;
             }
 
@@ -1296,6 +1433,29 @@ public class ParamBinder {
 
     private static Object defaultValue(Class<?> primitiveType) {
         return Array.get(Array.newInstance(primitiveType, 1), 0);
+    }
+
+    private static FileUpload bindFile(HttpServletRequest request, String name) throws Exception {
+    jakarta.servlet.http.Part filePart = request.getPart(name);
+    if (filePart == null || filePart.getSize() == 0) {
+        return null;
+    }
+
+    String fileName = extractFileName(filePart);
+    byte[] bytes = filePart.getInputStream().readAllBytes();
+    
+    // Optionnel : Sauvegarder temporairement sur le disque ou garder en mémoire
+    return new FileUpload(fileName, null, bytes, filePart.getSize());
+}
+
+    private static String extractFileName(jakarta.servlet.http.Part part) {
+        String contentDisp = part.getHeader("content-disposition");
+        for (String s : contentDisp.split(";")) {
+            if (s.trim().startsWith("filename")) {
+                return s.substring(s.indexOf("=") + 2, s.length() - 1);
+            }
+        }
+        return "file";
     }
 }
 
