@@ -1,9 +1,7 @@
 package framework.util;
 
 import jakarta.servlet.http.HttpServletRequest;
-import java.lang.reflect.Array;
-import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
+
 import java.time.LocalDate;
 import java.lang.reflect.*;
 import java.util.List;
@@ -11,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Vector;
 import java.util.Map;
 import java.util.HashMap;
-
 
 public class ParamBinder {
 
@@ -44,7 +41,7 @@ public class ParamBinder {
                 args[i] = bindMap(request);
                 continue;
             }
-            
+
             if (isPrimitiveOrWrapper(type) || type == String.class) {
                 String raw = request.getParameter(name);
                 args[i] = convert(raw, type, name);
@@ -61,37 +58,52 @@ public class ParamBinder {
                 || type == Short.class || type == Byte.class || type == Character.class;
     }
 
-    private static Object bindObject(Class<?> clazz, HttpServletRequest request, String prefix) throws Exception {
+    private static Object bindObject(
+            Class<?> clazz,
+            HttpServletRequest request,
+            String prefix) throws Exception {
 
-        Constructor constructor=clazz.getDeclaredConstructor();
+        Constructor<?> constructor = clazz.getDeclaredConstructor();
         constructor.setAccessible(true);
 
         Object instance = constructor.newInstance();
+
         Field[] fields = clazz.getDeclaredFields();
 
         for (Field field : fields) {
             field.setAccessible(true);
+
             String fieldName = field.getName();
-            
-            // Recherche du paramètre (ex: "nom" ou préfixé "employe.nom")
-            String paramName = (prefix != null && !prefix.isEmpty()) ? prefix + "." + fieldName : fieldName;
+
+            String paramName = (prefix != null && !prefix.isEmpty())
+                    ? prefix + "." + fieldName
+                    : fieldName;
+
             String raw = request.getParameter(paramName);
+
             if (raw == null) {
-                raw = request.getParameter(fieldName); // repli sur le nom simple du champ
+                raw = request.getParameter(fieldName);
             }
 
             Class<?> fieldType = field.getType();
-            if (isPrimitiveOrWrapper(fieldType) || fieldType == String.class || fieldType == LocalDate.class ) {
-                Object val = convert(raw, fieldType, fieldName);
-                field.set(instance, val);
+
+            if (isPrimitiveOrWrapper(fieldType)
+                    || fieldType == String.class
+                    || fieldType == LocalDate.class) {
+
+                Object value = convert(raw, fieldType, fieldName);
+                field.set(instance, value);
+
             } else {
-                // Objet imbriqué
-                Object nestedObj = bindObject(fieldType, request, fieldName);
-                field.set(instance, nestedObj);
+                Object nestedObject = bindObject(fieldType, request, fieldName);
+
+                field.set(instance, nestedObject);
             }
         }
+
         return instance;
     }
+
     private static Object bindList(Parameter p, HttpServletRequest request, String name) throws Exception {
         String[] values = request.getParameterValues(name);
         List<Object> list = new ArrayList<>();
@@ -149,18 +161,26 @@ public class ParamBinder {
         String value = raw.trim();
 
         try {
-            if (type == int.class || type == Integer.class) return Integer.valueOf(value);
-            if (type == long.class || type == Long.class) return Long.valueOf(value);
-            if (type == double.class || type == Double.class) return Double.valueOf(value);
-            if (type == float.class || type == Float.class) return Float.valueOf(value);
-            if (type == short.class || type == Short.class) return Short.valueOf(value);
-            if (type == byte.class || type == Byte.class) return Byte.valueOf(value);
-            if (type == char.class || type == Character.class) return Character.valueOf(value.charAt(0));
+            if (type == int.class || type == Integer.class)
+                return Integer.valueOf(value);
+            if (type == long.class || type == Long.class)
+                return Long.valueOf(value);
+            if (type == double.class || type == Double.class)
+                return Double.valueOf(value);
+            if (type == float.class || type == Float.class)
+                return Float.valueOf(value);
+            if (type == short.class || type == Short.class)
+                return Short.valueOf(value);
+            if (type == byte.class || type == Byte.class)
+                return Byte.valueOf(value);
+            if (type == char.class || type == Character.class)
+                return Character.valueOf(value.charAt(0));
             if (type == boolean.class || type == Boolean.class) {
                 // une checkbox cochée envoie "on" par défaut
                 return value.equalsIgnoreCase("true") || value.equalsIgnoreCase("on")
                         || value.equals("1") || value.equalsIgnoreCase("yes");
-            }if (type == LocalDate.class) {
+            }
+            if (type == LocalDate.class) {
                 return LocalDate.parse(value);
             }
         } catch (NumberFormatException e) {

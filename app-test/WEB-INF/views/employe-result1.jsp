@@ -22,7 +22,13 @@
         <li><strong>Poste :</strong> ${employe.poste}</li>
         <li><strong>Salaire :</strong> ${employe.salaire}</li>
         <li><strong>Date d'embauche :</strong> ${employe.dateEmbauche}</li>
+        <li>
+            <strong>Adresse :</strong>
+            ${employe.addresse.addresse}
+        </li>
     </ul>
+
+    <li><strong>Addresse :</strong> ${addresse.addresse}</li>
 
     <h3>Compétences :</h3>
     <ul>

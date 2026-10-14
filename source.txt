@@ -1,7 +1,7 @@
 ==================================================
 EXPORT COMPLET DU PROJET
-Date : dim. 11 oct 2026 00:07:14 EAT
-Répertoire : /home/huhu/Documents/GitHub/SprintSpringMvcMrNaina
+Date : mer. 14 oct. 2026 10:37:21 EAT
+Répertoire : /home/andrianandrainy/S5/GitHub/SprintSpringMvcMrNaina
 ==================================================
 
 
@@ -90,7 +90,7 @@ public class TestController {
         return mv;
     }
 
-        @Get("/employe-list")
+    @Get("/employe-list")
     public ModelView listEmploye() {
         ModelView mv = new ModelView("employe-list.jsp");
         
@@ -125,6 +125,13 @@ public class TestController {
     }
 
 
+
+    @Get("/employe-form-vector-map")
+    public ModelView showForm2() {
+        return new ModelView("employe-form-vector-map.jsp");
+    }
+
+
     @UrlMapping(value = "/employe-save", method = "POST")
     public ModelView save(String nom, int age, double salaire, boolean actif) {
         ModelView mv = new ModelView("employe-result.jsp");
@@ -142,6 +149,14 @@ public class TestController {
         // L'objet 'employe' est automatiquement instancié et rempli à partir des champs du formulaire
         mv.addItem("employe", employe);
         mv.addItem("competences", competences);
+        return mv;
+    }
+
+    @UrlMapping(value = "/employe-save-vector-map", method = "POST")
+    public ModelView saveVectorMap(java.util.Vector<String> competencesVector, Map<String, Object> allParams) {
+        ModelView mv = new ModelView("employe-result2.jsp");
+        mv.addItem("competencesVector", competencesVector);
+        mv.addItem("metaData", allParams);
         return mv;
     }
     /*
@@ -231,6 +246,16 @@ FICHIER : ./app-test/WEB-INF/views/employe-form-objet.jsp
             <input type="date" name="dateEmbauche">
         </div>
 
+        <div class="form-group">
+            <label for="addresse">Adresse :</label>
+            <input
+                type="text"
+                id="addresse"
+                name="addresse.addresse"
+                placeholder="Ex : Antananarivo"
+            >
+        </div>
+
         <hr style="width: 40%; text-align: left;">
 
     <!-- Section Liste dynamique pour les compétences -->
@@ -288,6 +313,33 @@ FICHIER : ./app-test/WEB-INF/views/employe-form-objet.jsp
             conteneur.appendChild(ligne);
         });
     </script>
+</html>
+
+==================================================
+FICHIER : ./app-test/WEB-INF/views/employe-form-vector-map.jsp
+==================================================
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Test Vector et Map</title>
+</head>
+<body>
+    <h1>Test de Binding : Vector et Map</h1>
+    <form action="${pageContext.request.contextPath}/employe-save-vector-map" method="post">
+        <p>
+            <label>Compétence Vector 1 : <input type="text" name="competencesVector" value="Java Avancé"></label>
+        </p>
+        <p>
+            <label>Compétence Vector 2 : <input type="text" name="competencesVector" value="Architecture MVC"></label>
+        </p>
+        <p>
+            <label>Paramètre libre Map (ex: projet) : <input type="text" name="projet" value="Sprint Framework"></label>
+        </p>
+        <button type="submit">Envoyer</button>
+    </form>
+</body>
 </html>
 
 ==================================================
@@ -399,7 +451,13 @@ FICHIER : ./app-test/WEB-INF/views/employe-result1.jsp
         <li><strong>Poste :</strong> ${employe.poste}</li>
         <li><strong>Salaire :</strong> ${employe.salaire}</li>
         <li><strong>Date d'embauche :</strong> ${employe.dateEmbauche}</li>
+        <li>
+            <strong>Adresse :</strong>
+            ${employe.addresse.addresse}
+        </li>
     </ul>
+
+    <li><strong>Addresse :</strong> ${addresse.addresse}</li>
 
     <h3>Compétences :</h3>
     <ul>
@@ -419,6 +477,58 @@ FICHIER : ./app-test/WEB-INF/views/employe-result1.jsp
 
     <br>
     <p><a href="${pageContext.request.contextPath}/employe-form-objet">Retour au formulaire</a></p>
+</body>
+</html>
+
+==================================================
+FICHIER : ./app-test/WEB-INF/views/employe-result2.jsp
+==================================================
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="java.util.Vector, java.util.Map" %>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Résultat Vector & Map</title>
+</head>
+<body>
+    <h1>Résultat de la requête (Vector & Map)</h1>
+    
+    <h3>Éléments reçus dans le Vector :</h3>
+    <ul>
+    <%
+        Vector<String> vec = (Vector<String>) request.getAttribute("competencesVector");
+        if (vec != null) {
+            for (String s : vec) {
+    %>
+        <li><%= s %></li>
+    <%      }
+        }
+    %>
+    </ul>
+
+    <h3>Éléments reçus dans la Map :</h3>
+    <ul>
+    <%
+        Map<String, Object> map = (Map<String, Object>) request.getAttribute("metaData");
+        if (map != null) {
+            for (Map.Entry<String, Object> entry : map.entrySet()) {
+    %>
+        <li><strong><%= entry.getKey() %> :</strong> 
+            <% 
+                if (entry.getValue() instanceof String[]) {
+                    out.print(java.util.Arrays.toString((String[]) entry.getValue()));
+                } else {
+                    out.print(entry.getValue());
+                }
+            %>
+        </li>
+    <%      }
+        }
+    %>
+    </ul>
+
+    <p><a href="${pageContext.request.contextPath}/employe-form-vector-map">Retour au formulaire</a></p>
 </body>
 </html>
 
@@ -993,9 +1103,7 @@ FICHIER : ./spring0/src/framework/util/ParamBinder.java
 package framework.util;
 
 import jakarta.servlet.http.HttpServletRequest;
-import java.lang.reflect.Array;
-import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
+
 import java.time.LocalDate;
 import java.lang.reflect.*;
 import java.util.List;
@@ -1003,7 +1111,6 @@ import java.util.ArrayList;
 import java.util.Vector;
 import java.util.Map;
 import java.util.HashMap;
-
 
 public class ParamBinder {
 
@@ -1036,7 +1143,7 @@ public class ParamBinder {
                 args[i] = bindMap(request);
                 continue;
             }
-            
+
             if (isPrimitiveOrWrapper(type) || type == String.class) {
                 String raw = request.getParameter(name);
                 args[i] = convert(raw, type, name);
@@ -1053,37 +1160,52 @@ public class ParamBinder {
                 || type == Short.class || type == Byte.class || type == Character.class;
     }
 
-    private static Object bindObject(Class<?> clazz, HttpServletRequest request, String prefix) throws Exception {
+    private static Object bindObject(
+            Class<?> clazz,
+            HttpServletRequest request,
+            String prefix) throws Exception {
 
-        Constructor constructor=clazz.getDeclaredConstructor();
+        Constructor<?> constructor = clazz.getDeclaredConstructor();
         constructor.setAccessible(true);
 
         Object instance = constructor.newInstance();
+
         Field[] fields = clazz.getDeclaredFields();
 
         for (Field field : fields) {
             field.setAccessible(true);
+
             String fieldName = field.getName();
-            
-            // Recherche du paramètre (ex: "nom" ou préfixé "employe.nom")
-            String paramName = (prefix != null && !prefix.isEmpty()) ? prefix + "." + fieldName : fieldName;
+
+            String paramName = (prefix != null && !prefix.isEmpty())
+                    ? prefix + "." + fieldName
+                    : fieldName;
+
             String raw = request.getParameter(paramName);
+
             if (raw == null) {
-                raw = request.getParameter(fieldName); // repli sur le nom simple du champ
+                raw = request.getParameter(fieldName);
             }
 
             Class<?> fieldType = field.getType();
-            if (isPrimitiveOrWrapper(fieldType) || fieldType == String.class || fieldType == LocalDate.class ) {
-                Object val = convert(raw, fieldType, fieldName);
-                field.set(instance, val);
+
+            if (isPrimitiveOrWrapper(fieldType)
+                    || fieldType == String.class
+                    || fieldType == LocalDate.class) {
+
+                Object value = convert(raw, fieldType, fieldName);
+                field.set(instance, value);
+
             } else {
-                // Objet imbriqué
-                Object nestedObj = bindObject(fieldType, request, fieldName);
-                field.set(instance, nestedObj);
+                Object nestedObject = bindObject(fieldType, request, fieldName);
+
+                field.set(instance, nestedObject);
             }
         }
+
         return instance;
     }
+
     private static Object bindList(Parameter p, HttpServletRequest request, String name) throws Exception {
         String[] values = request.getParameterValues(name);
         List<Object> list = new ArrayList<>();
@@ -1141,18 +1263,26 @@ public class ParamBinder {
         String value = raw.trim();
 
         try {
-            if (type == int.class || type == Integer.class) return Integer.valueOf(value);
-            if (type == long.class || type == Long.class) return Long.valueOf(value);
-            if (type == double.class || type == Double.class) return Double.valueOf(value);
-            if (type == float.class || type == Float.class) return Float.valueOf(value);
-            if (type == short.class || type == Short.class) return Short.valueOf(value);
-            if (type == byte.class || type == Byte.class) return Byte.valueOf(value);
-            if (type == char.class || type == Character.class) return Character.valueOf(value.charAt(0));
+            if (type == int.class || type == Integer.class)
+                return Integer.valueOf(value);
+            if (type == long.class || type == Long.class)
+                return Long.valueOf(value);
+            if (type == double.class || type == Double.class)
+                return Double.valueOf(value);
+            if (type == float.class || type == Float.class)
+                return Float.valueOf(value);
+            if (type == short.class || type == Short.class)
+                return Short.valueOf(value);
+            if (type == byte.class || type == Byte.class)
+                return Byte.valueOf(value);
+            if (type == char.class || type == Character.class)
+                return Character.valueOf(value.charAt(0));
             if (type == boolean.class || type == Boolean.class) {
                 // une checkbox cochée envoie "on" par défaut
                 return value.equalsIgnoreCase("true") || value.equalsIgnoreCase("on")
                         || value.equals("1") || value.equalsIgnoreCase("yes");
-            }if (type == LocalDate.class) {
+            }
+            if (type == LocalDate.class) {
                 return LocalDate.parse(value);
             }
         } catch (NumberFormatException e) {
@@ -1473,6 +1603,45 @@ public class DatabaseConnection {
 }
 
 ==================================================
+FICHIER : ./springboot/src/main/java/com/example/entreprise/entity/Addresse.java
+==================================================
+package com.example.entreprise.entity;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Column;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "addresse")
+public class Addresse {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "addresse")
+    private String addresse;
+
+    public Addresse() {
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getAddresse() {
+        return addresse;
+    }
+
+    public void setAddresse(String addresse) {
+        this.addresse = addresse;
+    }
+}
+
+==================================================
 FICHIER : ./springboot/src/main/java/com/example/entreprise/entity/Employe.java
 ==================================================
 package com.example.entreprise.entity;
@@ -1482,6 +1651,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 
 import java.time.LocalDate;
@@ -1510,6 +1680,17 @@ public class Employe {
 
     @Column(name = "date_embauche")
     private LocalDate dateEmbauche;
+
+    @JoinColumn(name = "addresse_id")
+    private Addresse addresse;
+
+    public Addresse getAddresse() {
+        return addresse;
+    }
+    public void setAddresse(Addresse addresse) {
+        this.addresse = addresse;
+    }
+
 
     public   Employe() {
     }
@@ -1582,6 +1763,19 @@ public class EntrepriseApplication {
         SpringApplication.run(EntrepriseApplication.class, args);
     }
 }
+
+==================================================
+FICHIER : ./springboot/src/main/java/com/example/entreprise/repository/AddresseRepository.java
+==================================================
+package com.example.entreprise.repository;
+
+import com.example.entreprise.entity.Addresse;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface  AddresseRepository  extends JpaRepository<Addresse, Integer>{
+    
+}
+
 
 ==================================================
 FICHIER : ./springboot/src/main/java/com/example/entreprise/repository/EmployeRepository.java

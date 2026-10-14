@@ -1,6 +1,8 @@
-/home/huhu/Documents/GitHub/SprintSpringMvcMrNaina/springboot/src/main/java/com/example/entreprise/EntrepriseApplication.java
-/home/huhu/Documents/GitHub/SprintSpringMvcMrNaina/springboot/src/main/java/com/example/entreprise/config/DatabaseConfig.java
-/home/huhu/Documents/GitHub/SprintSpringMvcMrNaina/springboot/src/main/java/com/example/entreprise/database/DatabaseConnection.java
-/home/huhu/Documents/GitHub/SprintSpringMvcMrNaina/springboot/src/main/java/com/example/entreprise/entity/Employe.java
-/home/huhu/Documents/GitHub/SprintSpringMvcMrNaina/springboot/src/main/java/com/example/entreprise/repository/EmployeRepository.java
-/home/huhu/Documents/GitHub/SprintSpringMvcMrNaina/springboot/src/main/java/com/example/entreprise/service/EmployeService.java
+/home/andrianandrainy/S5/GitHub/SprintSpringMvcMrNaina/springboot/src/main/java/com/example/entreprise/EntrepriseApplication.java
+/home/andrianandrainy/S5/GitHub/SprintSpringMvcMrNaina/springboot/src/main/java/com/example/entreprise/config/DatabaseConfig.java
+/home/andrianandrainy/S5/GitHub/SprintSpringMvcMrNaina/springboot/src/main/java/com/example/entreprise/database/DatabaseConnection.java
+/home/andrianandrainy/S5/GitHub/SprintSpringMvcMrNaina/springboot/src/main/java/com/example/entreprise/entity/Addresse.java
+/home/andrianandrainy/S5/GitHub/SprintSpringMvcMrNaina/springboot/src/main/java/com/example/entreprise/entity/Employe.java
+/home/andrianandrainy/S5/GitHub/SprintSpringMvcMrNaina/springboot/src/main/java/com/example/entreprise/repository/AddresseRepository.java
+/home/andrianandrainy/S5/GitHub/SprintSpringMvcMrNaina/springboot/src/main/java/com/example/entreprise/repository/EmployeRepository.java
+/home/andrianandrainy/S5/GitHub/SprintSpringMvcMrNaina/springboot/src/main/java/com/example/entreprise/service/EmployeService.java

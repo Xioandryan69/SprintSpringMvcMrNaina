@@ -42,6 +42,16 @@
             <input type="date" name="dateEmbauche">
         </div>
 
+        <div class="form-group">
+            <label for="addresse">Adresse :</label>
+            <input
+                type="text"
+                id="addresse"
+                name="addresse.addresse"
+                placeholder="Ex : Antananarivo"
+            >
+        </div>
+
         <hr style="width: 40%; text-align: left;">
 
     <!-- Section Liste dynamique pour les compétences -->
