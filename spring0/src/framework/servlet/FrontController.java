@@ -113,6 +113,10 @@ public class FrontController extends HttpServlet {
 
             urlMappingmethod = (HashMap<UrlMethod, Mapping>) context.getAttribute("urlMappingMethod");
             controllers = (List<Class<?>>) context.getAttribute("controllers");
+            String uploadDir = getInitParameter("upload-directory");
+            if (uploadDir != null) {
+                context.setAttribute("uploadDirectory", uploadDir);
+            }
 
         } catch (Exception e) {
             throw new ServletException(e);

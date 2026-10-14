@@ -3,6 +3,7 @@ package controller;
 import framework.annotation.Controller;
 import framework.annotation.Get;
 import framework.annotation.WebApi;
+import framework.util.FileUpload;
 import framework.util.ModelView;
 
 import framework.annotation.UrlMapping;
@@ -103,6 +104,20 @@ public class TestController {
         mv.addItem("competencesVector", competencesVector);
         mv.addItem("metaData", allParams);
         return mv;
+    }
+
+    @UrlMapping(value = "/upload-save", method = "POST")
+    public ModelView saveFile(String description, FileUpload monFichier) {
+        ModelView mv = new ModelView("result-upload.jsp");
+        mv.addItem("description", description);
+        mv.addItem("nomFichier", monFichier.getName());
+        mv.addItem("tailleFichier", monFichier.getSize());
+        return mv;
+    }
+
+    @Get("/upload-form")
+    public ModelView showUploadForm() {
+        return new ModelView("upload-form.jsp");
     }
     /*
     curl -X POST http://localhost:8080/employe-save-objet \
