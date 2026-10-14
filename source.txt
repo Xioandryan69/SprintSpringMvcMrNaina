@@ -1,7 +1,7 @@
 ==================================================
 EXPORT COMPLET DU PROJET
-Date : dim. 11 oct 2026 00:07:14 EAT
-Répertoire : /home/andrianandrainy/Documents/GitHub/SprintSpringMvcMrNaina
+Date : mer. 14 oct. 2026 09:43:32 EAT
+Répertoire : /home/andrianandrainy/S5/GitHub/SprintSpringMvcMrNaina
 ==================================================
 
 
@@ -90,7 +90,7 @@ public class TestController {
         return mv;
     }
 
-        @Get("/employe-list")
+    @Get("/employe-list")
     public ModelView listEmploye() {
         ModelView mv = new ModelView("employe-list.jsp");
         
@@ -125,6 +125,13 @@ public class TestController {
     }
 
 
+
+    @Get("/employe-form-vector-map")
+    public ModelView showForm2() {
+        return new ModelView("employe-form-vector-map.jsp");
+    }
+
+
     @UrlMapping(value = "/employe-save", method = "POST")
     public ModelView save(String nom, int age, double salaire, boolean actif) {
         ModelView mv = new ModelView("employe-result.jsp");
@@ -142,6 +149,14 @@ public class TestController {
         // L'objet 'employe' est automatiquement instancié et rempli à partir des champs du formulaire
         mv.addItem("employe", employe);
         mv.addItem("competences", competences);
+        return mv;
+    }
+
+    @UrlMapping(value = "/employe-save-vector-map", method = "POST")
+    public ModelView saveVectorMap(java.util.Vector<String> competencesVector, Map<String, Object> allParams) {
+        ModelView mv = new ModelView("employe-result2.jsp");
+        mv.addItem("competencesVector", competencesVector);
+        mv.addItem("metaData", allParams);
         return mv;
     }
     /*
@@ -231,6 +246,11 @@ FICHIER : ./app-test/WEB-INF/views/employe-form-objet.jsp
             <input type="date" name="dateEmbauche">
         </div>
 
+        <div class="form-group">
+            <label>Addresse :</label>
+            <input type="text" name="addresse">
+        </div>
+
         <hr style="width: 40%; text-align: left;">
 
     <!-- Section Liste dynamique pour les compétences -->
@@ -288,6 +308,33 @@ FICHIER : ./app-test/WEB-INF/views/employe-form-objet.jsp
             conteneur.appendChild(ligne);
         });
     </script>
+</html>
+
+==================================================
+FICHIER : ./app-test/WEB-INF/views/employe-form-vector-map.jsp
+==================================================
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Test Vector et Map</title>
+</head>
+<body>
+    <h1>Test de Binding : Vector et Map</h1>
+    <form action="${pageContext.request.contextPath}/employe-save-vector-map" method="post">
+        <p>
+            <label>Compétence Vector 1 : <input type="text" name="competencesVector" value="Java Avancé"></label>
+        </p>
+        <p>
+            <label>Compétence Vector 2 : <input type="text" name="competencesVector" value="Architecture MVC"></label>
+        </p>
+        <p>
+            <label>Paramètre libre Map (ex: projet) : <input type="text" name="projet" value="Sprint Framework"></label>
+        </p>
+        <button type="submit">Envoyer</button>
+    </form>
+</body>
 </html>
 
 ==================================================
@@ -399,7 +446,10 @@ FICHIER : ./app-test/WEB-INF/views/employe-result1.jsp
         <li><strong>Poste :</strong> ${employe.poste}</li>
         <li><strong>Salaire :</strong> ${employe.salaire}</li>
         <li><strong>Date d'embauche :</strong> ${employe.dateEmbauche}</li>
+        <li><strong>Addresse  :</strong> ${employe.addresse.addresse}</li>
     </ul>
+
+    <li><strong>Addresse :</strong> ${addresse.addresse}</li>
 
     <h3>Compétences :</h3>
     <ul>
@@ -419,6 +469,58 @@ FICHIER : ./app-test/WEB-INF/views/employe-result1.jsp
 
     <br>
     <p><a href="${pageContext.request.contextPath}/employe-form-objet">Retour au formulaire</a></p>
+</body>
+</html>
+
+==================================================
+FICHIER : ./app-test/WEB-INF/views/employe-result2.jsp
+==================================================
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="java.util.Vector, java.util.Map" %>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Résultat Vector & Map</title>
+</head>
+<body>
+    <h1>Résultat de la requête (Vector & Map)</h1>
+    
+    <h3>Éléments reçus dans le Vector :</h3>
+    <ul>
+    <%
+        Vector<String> vec = (Vector<String>) request.getAttribute("competencesVector");
+        if (vec != null) {
+            for (String s : vec) {
+    %>
+        <li><%= s %></li>
+    <%      }
+        }
+    %>
+    </ul>
+
+    <h3>Éléments reçus dans la Map :</h3>
+    <ul>
+    <%
+        Map<String, Object> map = (Map<String, Object>) request.getAttribute("metaData");
+        if (map != null) {
+            for (Map.Entry<String, Object> entry : map.entrySet()) {
+    %>
+        <li><strong><%= entry.getKey() %> :</strong> 
+            <% 
+                if (entry.getValue() instanceof String[]) {
+                    out.print(java.util.Arrays.toString((String[]) entry.getValue()));
+                } else {
+                    out.print(entry.getValue());
+                }
+            %>
+        </li>
+    <%      }
+        }
+    %>
+    </ul>
+
+    <p><a href="${pageContext.request.contextPath}/employe-form-vector-map">Retour au formulaire</a></p>
 </body>
 </html>
 
@@ -1473,6 +1575,35 @@ public class DatabaseConnection {
 }
 
 ==================================================
+FICHIER : ./springboot/src/main/java/com/example/entreprise/entity/Addresse.java
+==================================================
+package com.example.entreprise.entity;
+
+import jakarta.persistence.Column;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+import java.time.LocalDate;
+
+@Entity
+@Table(name = "addresse")
+public class Addresse {
+     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "addresse")
+    String addresse;
+    
+}
+
+
+==================================================
 FICHIER : ./springboot/src/main/java/com/example/entreprise/entity/Employe.java
 ==================================================
 package com.example.entreprise.entity;
@@ -1482,6 +1613,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 
 import java.time.LocalDate;
@@ -1510,6 +1642,17 @@ public class Employe {
 
     @Column(name = "date_embauche")
     private LocalDate dateEmbauche;
+
+    @JoinColumn(name = "addresse_id")
+    private Addresse addresse;
+
+    public Addresse getAddresse() {
+        return addresse;
+    }
+    public void setAddresse(Addresse addresse) {
+        this.addresse = addresse;
+    }
+
 
     public   Employe() {
     }
@@ -1582,6 +1725,19 @@ public class EntrepriseApplication {
         SpringApplication.run(EntrepriseApplication.class, args);
     }
 }
+
+==================================================
+FICHIER : ./springboot/src/main/java/com/example/entreprise/repository/AddresseRepository.java
+==================================================
+package com.example.entreprise.repository;
+
+import com.example.entreprise.entity.Addresse;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface  AddresseRepository  extends JpaRepository<Addresse, Integer>{
+    
+}
+
 
 ==================================================
 FICHIER : ./springboot/src/main/java/com/example/entreprise/repository/EmployeRepository.java

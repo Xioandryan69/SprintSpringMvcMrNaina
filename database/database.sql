@@ -7,6 +7,9 @@ CREATE DATABASE IF NOT EXISTS entreprise_db
 USE entreprise_db;
 
 -- 3. Création de la table 'employe'
+
+DROP TABLE employe;
+DELETE * TABLE FROM  employe;
 CREATE TABLE IF NOT EXISTS employe (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nom VARCHAR(100) NOT NULL,
@@ -14,11 +17,23 @@ CREATE TABLE IF NOT EXISTS employe (
     email VARCHAR(150) UNIQUE,
     poste VARCHAR(100),
     salaire DOUBLE,
-    date_embauche DATE DEFAULT (CURRENT_DATE)
+    date_embauche DATE DEFAULT (CURRENT_DATE),
+    addresse_id INT,
+    FOREIGN KEY (addresse_id) REFERENCES addresse(id)
 );
 
+INSERT INTO addresse (addresse) VALUES
+('123 Rue de la Paix, Antananarivo'),
+('456 Avenue des Champs, Antsirabe');
 -- 4. Insertion de données de test
 INSERT INTO employe (nom, prenom, email, poste, salaire) VALUES
 ('Rabe', 'Soa', 'soa.rabe@example.com', 'Développeur Java', 2500000.00),
 ('Rakoto', 'Jean', 'jean.rakoto@example.com', 'Chef de Projet', 3500000.00),
 ('Andria', 'Mina', 'mina.andria@example.com', 'Designer UX', 2000000.00);
+
+
+CREATE TABLE IF NOT EXISTS addresse (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    addresse VARCHAR(150) NOT NULL
+);
+
