@@ -1,6 +1,6 @@
 ==================================================
 EXPORT COMPLET DU PROJET
-Date : mer. 14 oct. 2026 11:26:16 EAT
+Date : mer. 21 oct. 2026 08:37:48 EAT
 Répertoire : /home/andrianandrainy/S5/GitHub/SprintSpringMvcMrNaina
 ==================================================
 
@@ -62,6 +62,7 @@ import framework.util.FileUpload;
 import framework.util.ModelView;
 
 import framework.annotation.UrlMapping;
+import framework.util.MySession;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
@@ -173,6 +174,33 @@ public class TestController {
     @Get("/upload-form")
     public ModelView showUploadForm() {
         return new ModelView("upload-form.jsp");
+    }
+
+    @Get("/session-set")
+    public ModelView setSessionData(MySession session) {
+        session.set("userConnected", "Andrianandrainy");
+        
+        ModelView mv = new ModelView("employe-result.jsp");
+        mv.addItem("message", "Voatsindry sy voatahiry tao anaty session ny anarana!");
+        return mv;
+    }
+
+    @Get("/session-get")
+    public ModelView getSessionData(MySession session) {
+        String user = (String) session.get("userConnected");
+        
+        ModelView mv = new ModelView("employe-result.jsp");
+        mv.addItem("nom", user);
+        return mv;
+    }
+
+    @Get("/session-remove")
+    public ModelView removeSessionData(MySession session) {
+        session.remove("userConnected");
+        
+        ModelView mv = new ModelView("employe-result.jsp");
+        mv.addItem("message", "Voafafa ny session!");
+        return mv;
     }
     /*
     curl -X POST http://localhost:8080/employe-save-objet \
@@ -655,6 +683,11 @@ FICHIER : ./app-test/WEB-INF/web.xml
             <param-value>controller,controller1</param-value>
         </init-param> -->
 
+        <init-param>
+            <param-name>upload-directory</param-name>
+            <param-value>/home/andrianandrainy/temp/upload/</param-value>
+        </init-param>
+
         <multipart-config>
             <max-file-size>10485760</max-file-size> <!-- 10 Mo max -->
             <max-request-size>20971520</max-request-size> <!-- 20 Mo max -->
@@ -924,6 +957,10 @@ public class FrontController extends HttpServlet {
 
             urlMappingmethod = (HashMap<UrlMethod, Mapping>) context.getAttribute("urlMappingMethod");
             controllers = (List<Class<?>>) context.getAttribute("controllers");
+            String uploadDir = getInitParameter("upload-directory");
+            if (uploadDir != null) {
+                context.setAttribute("uploadDirectory", uploadDir);
+            }
 
         } catch (Exception e) {
             throw new ServletException(e);
@@ -968,6 +1005,12 @@ public class FrontController extends HttpServlet {
 
                 // Sprint 7 : formulaire -> framework -> paramètres de la méthode
                 Object[] args = ParamBinder.buildArgs(method, request);
+                // Fanavaozana ny HttpSession raha nisy MySession nampiasaina tao amin'ny arguments
+                for (Object arg : args) {
+                    if (arg instanceof framework.util.MySession) {
+                        ((framework.util.MySession) arg).updateHttpSession();
+                    }
+                }
                 Object returnValue = method.invoke(controllerInstance, args);
                 if (method.isAnnotationPresent(WebApi.class)) {
                     response.setContentType("application/json; charset=UTF-8");
@@ -1230,6 +1273,66 @@ public class ModelView {
 }
 
 ==================================================
+FICHIER : ./spring0/src/framework/util/MySession.java
+==================================================
+package framework.util;
+
+import jakarta.servlet.http.HttpSession;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
+
+public class MySession {
+    private HttpSession httpSession;
+    private Map<String, Object> sessionMap = new HashMap<>();
+
+    public MySession(HttpSession httpSession) {
+        this.httpSession = httpSession;
+        if (httpSession != null) {
+            Enumeration<String> attributeNames = httpSession.getAttributeNames();
+            while (attributeNames.hasMoreElements()) {
+                String key = attributeNames.nextElement();
+                sessionMap.put(key, httpSession.getAttribute(key));
+            }
+        }
+    }
+
+    public Object get(String key) {
+        return sessionMap.get(key);
+    }
+
+    public void set(String key, Object value) {
+        sessionMap.put(key, value);
+    }
+
+    public void remove(String key) {
+        sessionMap.remove(key);
+    }
+
+    public Map<String, Object> getData() {
+        return sessionMap;
+    }
+
+    // Fomba fiasa handefasana sy hanavaozana ny HttpSession tena izy rehefa vita ny invoke
+    public void updateHttpSession() {
+        if (httpSession != null) {
+            // Esory ao anaty HttpSession izay efa nesorina tao amin'ny Map
+            Enumeration<String> attributeNames = httpSession.getAttributeNames();
+            while (attributeNames.hasMoreElements()) {
+                String key = attributeNames.nextElement();
+                if (!sessionMap.containsKey(key)) {
+                    httpSession.removeAttribute(key);
+                }
+            }
+            // Apetraka na havaozina ny sanda ao anaty HttpSession
+            for (Map.Entry<String, Object> entry : sessionMap.entrySet()) {
+                httpSession.setAttribute(entry.getKey(), entry.getValue());
+            }
+        }
+    }
+}
+
+==================================================
 FICHIER : ./spring0/src/framework/util/ParamBinder.java
 ==================================================
 package framework.util;
@@ -1263,6 +1366,11 @@ public class ParamBinder {
 
             if (HttpServletRequest.class.isAssignableFrom(type)) {
                 args[i] = request;
+                continue;
+            }
+            // Fitantanana ny Session (Sprint 9)
+            if (MySession.class.isAssignableFrom(type)) {
+                args[i] = new MySession(request.getSession());
                 continue;
             }
             // Dans ParamBinder.java, ajoutez la gestion du type FileUpload
@@ -1443,9 +1551,22 @@ public class ParamBinder {
 
     String fileName = extractFileName(filePart);
     byte[] bytes = filePart.getInputStream().readAllBytes();
+    long size = filePart.getSize();
+
+    String uploadDir = (String) request.getServletContext().getAttribute("uploadDirectory");
     
-    // Optionnel : Sauvegarder temporairement sur le disque ou garder en mémoire
-    return new FileUpload(fileName, null, bytes, filePart.getSize());
+    String savedPath = null;
+    if (uploadDir != null) {
+      
+        java.io.File dir = new java.io.File(uploadDir);
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+        savedPath = uploadDir + java.io.File.separator + fileName;
+        java.nio.file.Files.write(java.nio.file.Paths.get(savedPath), bytes);
+    }
+    return new FileUpload(fileName, savedPath, bytes, size);
+
 }
 
     private static String extractFileName(jakarta.servlet.http.Part part) {

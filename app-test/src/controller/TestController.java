@@ -7,6 +7,7 @@ import framework.util.FileUpload;
 import framework.util.ModelView;
 
 import framework.annotation.UrlMapping;
+import framework.util.MySession;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
@@ -118,6 +119,33 @@ public class TestController {
     @Get("/upload-form")
     public ModelView showUploadForm() {
         return new ModelView("upload-form.jsp");
+    }
+
+    @Get("/session-set")
+    public ModelView setSessionData(MySession session) {
+        session.set("userConnected", "Andrianandrainy");
+        
+        ModelView mv = new ModelView("employe-result.jsp");
+        mv.addItem("message", "Voatsindry sy voatahiry tao anaty session ny anarana!");
+        return mv;
+    }
+
+    @Get("/session-get")
+    public ModelView getSessionData(MySession session) {
+        String user = (String) session.get("userConnected");
+        
+        ModelView mv = new ModelView("employe-result.jsp");
+        mv.addItem("nom", user);
+        return mv;
+    }
+
+    @Get("/session-remove")
+    public ModelView removeSessionData(MySession session) {
+        session.remove("userConnected");
+        
+        ModelView mv = new ModelView("employe-result.jsp");
+        mv.addItem("message", "Voafafa ny session!");
+        return mv;
     }
     /*
     curl -X POST http://localhost:8080/employe-save-objet \
