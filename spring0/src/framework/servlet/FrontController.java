@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import framework.annotation.Auth;
 import framework.annotation.Controller;
 import framework.annotation.Get;
 import framework.annotation.WebApi;
@@ -130,7 +131,42 @@ public class FrontController extends HttpServlet {
             try {
                 Class<?> clazz = Class.forName(m.getClassName());
                 Object controllerInstance = clazz.getDeclaredConstructor().newInstance();
-                Method method = findMethod(clazz, m.getMethod());
+                Method method = findMethod(clazz, m.getMethod());// --- SPRINT 10 & 10 BIS : VÉRIFICATION DE L'AUTHENTIFICATION ET DES RÔLES ---
+                Auth auth = method.getAnnotation(Auth.class);
+                if (auth == null && clazz.isAnnotationPresent(Auth.class)) {
+                    auth = clazz.getAnnotation(Auth.class);
+                }
+
+                if (auth != null) {
+                    jakarta.servlet.http.HttpSession httpSession = request.getSession();
+                    String sessionKey = auth.key();
+                    Object sessionValue = httpSession.getAttribute(sessionKey);
+
+                    // 1. Sprint 10 : Vérification si l'utilisateur est connecté
+                    if (sessionValue == null) {
+                        throw new RuntimeException("Accès refusé : Vous devez être authentifié (connecté) pour accéder à cette ressource.");
+                    }
+
+                    // 2. Sprint 10 Bis : Vérification des rôles spécifiques
+                    String[] requiredRoles = auth.value();
+                    if (requiredRoles.length > 0) {
+                        boolean authorized = false;
+                        String userRole = sessionValue.toString(); 
+
+                        for (String role : requiredRoles) {
+                            if (role.trim().equalsIgnoreCase(userRole.trim())) {
+                                authorized = true;
+                                break;
+                            }
+                        }
+
+                        if (!authorized) {
+                            throw new RuntimeException("Accès interdit : Vous n'avez pas le rôle requis pour exécuter cette méthode.");
+                        }
+                    }
+                }
+
+
 
                 // 1. Construction des arguments (le ParamBinder injecte MySession initialisé avec la HttpSession)
                 Object[] args = ParamBinder.buildArgs(method, request);

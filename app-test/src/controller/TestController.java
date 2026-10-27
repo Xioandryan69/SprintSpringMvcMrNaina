@@ -5,6 +5,7 @@ import framework.annotation.Get;
 import framework.annotation.WebApi;
 import framework.util.FileUpload;
 import framework.util.ModelView;
+import framework.annotation.Auth;
 
 import framework.annotation.UrlMapping;
 import framework.util.MySession;
@@ -145,6 +146,38 @@ public class TestController {
         
         ModelView mv = new ModelView("employe-result.jsp");
         mv.addItem("message", "Voafafa ny session!");
+        return mv;
+    }
+
+    @Get("/profil-secure")
+    @Auth(key = "userConnected")
+    public ModelView profilSecurise() {
+        ModelView mv = new ModelView("profil.jsp");
+        mv.addItem("message", "Bienvenue sur votre espace sécurisé !");
+        return mv;
+    }
+
+    @Get("/admin-dashboard")
+    @Auth(key = "userRole", value = {"ADMIN", "SUPERVISEUR"})
+    public ModelView dashboardAdmin() {
+        ModelView mv = new ModelView("admin-dashboard.jsp");
+        mv.addItem("titre", "Tableau de bord Administrateur");
+        return mv;
+    }
+
+    @Get("/login")
+    public ModelView showLogin() {
+        return new ModelView("login.jsp");
+    }
+
+    @UrlMapping(value = "/login-submit", method = "POST")
+    public ModelView processLogin(String username, String role, MySession session) {
+        // Initialisation de la session avec les clés attendues par @Auth
+        session.set("userConnected", username);
+        session.set("userRole", role);
+
+        ModelView mv = new ModelView("employe-result.jsp");
+        mv.addItem("message", "Connexion réussie en tant que : " + username + " (Rôle : " + role + ")");
         return mv;
     }
     /*
