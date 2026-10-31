@@ -5,8 +5,10 @@ import framework.annotation.Get;
 import framework.annotation.WebApi;
 import framework.util.FileUpload;
 import framework.util.ModelView;
+import framework.annotation.Auth;
 
 import framework.annotation.UrlMapping;
+import framework.util.MySession;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
@@ -118,6 +120,65 @@ public class TestController {
     @Get("/upload-form")
     public ModelView showUploadForm() {
         return new ModelView("upload-form.jsp");
+    }
+
+    @Get("/session-set")
+    public ModelView setSessionData(MySession session) {
+        session.set("userConnected", "Andrianandrainy");
+        
+        ModelView mv = new ModelView("employe-result.jsp");
+        mv.addItem("message", "Voatsindry sy voatahiry tao anaty session ny anarana!");
+        return mv;
+    }
+
+    @Get("/session-get")
+    public ModelView getSessionData(MySession session) {
+        String user = (String) session.get("userConnected");
+        
+        ModelView mv = new ModelView("employe-result.jsp");
+        mv.addItem("nom", user);
+        return mv;
+    }
+
+    @Get("/session-remove")
+    public ModelView removeSessionData(MySession session) {
+        session.remove("userConnected");
+        
+        ModelView mv = new ModelView("employe-result.jsp");
+        mv.addItem("message", "Voafafa ny session!");
+        return mv;
+    }
+
+    @Get("/profil-secure")
+    @Auth(key = "userConnected")
+    public ModelView profilSecurise() {
+        ModelView mv = new ModelView("profil.jsp");
+        mv.addItem("message", "Bienvenue sur votre espace sécurisé !");
+        return mv;
+    }
+
+    @Get("/admin-dashboard")
+    @Auth(key = "userRole", value = {"ADMIN", "SUPERVISEUR"})
+    public ModelView dashboardAdmin() {
+        ModelView mv = new ModelView("admin-dashboard.jsp");
+        mv.addItem("titre", "Tableau de bord Administrateur");
+        return mv;
+    }
+
+    @Get("/login")
+    public ModelView showLogin() {
+        return new ModelView("login.jsp");
+    }
+
+    @UrlMapping(value = "/login-submit", method = "POST")
+    public ModelView processLogin(String username, String role, MySession session) {
+        // Initialisation de la session avec les clés attendues par @Auth
+        session.set("userConnected", username);
+        session.set("userRole", role);
+
+        ModelView mv = new ModelView("employe-result.jsp");
+        mv.addItem("message", "Connexion réussie en tant que : " + username + " (Rôle : " + role + ")");
+        return mv;
     }
     /*
     curl -X POST http://localhost:8080/employe-save-objet \

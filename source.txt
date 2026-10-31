@@ -1,6 +1,6 @@
 ==================================================
 EXPORT COMPLET DU PROJET
-Date : mer. 14 oct. 2026 11:26:16 EAT
+Date : mer. 28 oct. 2026 00:55:38 EAT
 Répertoire : /home/andrianandrainy/S5/GitHub/SprintSpringMvcMrNaina
 ==================================================
 
@@ -60,8 +60,10 @@ import framework.annotation.Get;
 import framework.annotation.WebApi;
 import framework.util.FileUpload;
 import framework.util.ModelView;
+import framework.annotation.Auth;
 
 import framework.annotation.UrlMapping;
+import framework.util.MySession;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
@@ -173,6 +175,49 @@ public class TestController {
     @Get("/upload-form")
     public ModelView showUploadForm() {
         return new ModelView("upload-form.jsp");
+    }
+
+    @Get("/session-set")
+    public ModelView setSessionData(MySession session) {
+        session.set("userConnected", "Andrianandrainy");
+        
+        ModelView mv = new ModelView("employe-result.jsp");
+        mv.addItem("message", "Voatsindry sy voatahiry tao anaty session ny anarana!");
+        return mv;
+    }
+
+    @Get("/session-get")
+    public ModelView getSessionData(MySession session) {
+        String user = (String) session.get("userConnected");
+        
+        ModelView mv = new ModelView("employe-result.jsp");
+        mv.addItem("nom", user);
+        return mv;
+    }
+
+    @Get("/session-remove")
+    public ModelView removeSessionData(MySession session) {
+        session.remove("userConnected");
+        
+        ModelView mv = new ModelView("employe-result.jsp");
+        mv.addItem("message", "Voafafa ny session!");
+        return mv;
+    }
+
+    @Get("/profil-secure")
+    @Auth(key = "userConnected")
+    public ModelView profilSecurise() {
+        ModelView mv = new ModelView("profil.jsp");
+        mv.addItem("message", "Bienvenue sur votre espace sécurisé !");
+        return mv;
+    }
+
+    @Get("/admin-dashboard")
+    @Auth(key = "userRole", value = {"ADMIN", "SUPERVISEUR"})
+    public ModelView dashboardAdmin() {
+        ModelView mv = new ModelView("admin-dashboard.jsp");
+        mv.addItem("titre", "Tableau de bord Administrateur");
+        return mv;
     }
     /*
     curl -X POST http://localhost:8080/employe-save-objet \
@@ -557,16 +602,17 @@ FICHIER : ./app-test/WEB-INF/views/employe-result.jsp
     <meta charset="UTF-8">
     <title>Employé enregistré</title>
 </head>
-<body>
+<body>.
+    <p>Utilisateur en session : <strong>${sessionScope.userConnected}</strong></p>
+
     <h1>Employé enregistré</h1>
     <p>Nom : ${nom}</p>
-    <p>Âge : ${age}</p>
+    <p>Âge : ${age}</p
     <p>Salaire : ${salaire}</p>
     <p>Actif : ${actif}</p>
     <p><a href="${pageContext.request.contextPath}/employe-form">Retour au formulaire</a></p>
 </body>
 </html>
-
 
 ==================================================
 FICHIER : ./app-test/WEB-INF/views/result-upload.jsp
@@ -655,6 +701,11 @@ FICHIER : ./app-test/WEB-INF/web.xml
             <param-value>controller,controller1</param-value>
         </init-param> -->
 
+        <init-param>
+            <param-name>upload-directory</param-name>
+            <param-value>/home/andrianandrainy/temp/upload/</param-value>
+        </init-param>
+
         <multipart-config>
             <max-file-size>10485760</max-file-size> <!-- 10 Mo max -->
             <max-request-size>20971520</max-request-size> <!-- 20 Mo max -->
@@ -672,6 +723,11 @@ FICHIER : ./app-test/WEB-INF/web.xml
 </web-app>
 
 ==================================================
+FICHIER : ./extensions-vscode.txt
+==================================================
+
+
+==================================================
 FICHIER : ./.git
 ==================================================
 
@@ -685,6 +741,24 @@ FICHIER : ./source.txt
 FICHIER : ./spring0/out
 ==================================================
 
+
+==================================================
+FICHIER : ./spring0/src/framework/annotation/Auth.java
+==================================================
+package framework.annotation;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Auth
+{
+    String key () default  "userConnected";
+    String [] value() default {};
+}
 
 ==================================================
 FICHIER : ./spring0/src/framework/annotation/Controller.java
@@ -816,7 +890,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletContext;
-//import jakarta.servlet.annotation.WebServlet;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Method;
@@ -824,6 +897,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import framework.annotation.Auth;
 import framework.annotation.Controller;
 import framework.annotation.Get;
 import framework.annotation.WebApi;
@@ -834,39 +908,30 @@ import java.util.HashMap;
 
 import framework.util.ModelView;
 import framework.util.ParamBinder;
+import framework.util.MySession;
 import java.lang.reflect.InvocationTargetException;
 import jakarta.servlet.RequestDispatcher;
 import java.lang.reflect.Field;
-import java.util.Map;
 import java.util.StringJoiner;
-
-
-
-//@WebServlet("/*")
 
 public class FrontController extends HttpServlet {
 
     private List<Class<?>> controllers = new ArrayList<>();
-    // private HashMap<String, Mapping> urlMapping = new HashMap<>();
     private HashMap<UrlMethod, Mapping> urlMappingmethod = new HashMap<>();
-
 
     private String toJsonNative(Object obj) {
         if (obj == null) {
             return "null";
         }
         
-        // 1. Gestion des chaînes et caractères
         if (obj instanceof CharSequence || obj instanceof Character) {
             return "\"" + obj.toString().replace("\"", "\\\"") + "\"";
         }
         
-        // 2. Gestion des nombres et booléens (pas de guillemets)
         if (obj instanceof Number || obj instanceof Boolean) {
             return obj.toString();
         }
         
-        // 3. Gestion des Listes / Tableaux / Collections (Iterable)
         if (obj instanceof Iterable) {
             StringJoiner joiner = new StringJoiner(",", "[", "]");
             for (Object item : (Iterable<?>) obj) {
@@ -875,7 +940,6 @@ public class FrontController extends HttpServlet {
             return joiner.toString();
         }
         
-        // 4. Gestion des Maps (dictionnaires)
         if (obj instanceof Map) {
             StringJoiner joiner = new StringJoiner(",", "{", "}");
             for (Map.Entry<?, ?> entry : ((Map<?, ?>) obj).entrySet()) {
@@ -886,23 +950,20 @@ public class FrontController extends HttpServlet {
             return joiner.toString();
         }
         
-        // 5. Gestion des DTOs / Objets personnalisés via Réflexion
         try {
             StringJoiner joiner = new StringJoiner(",", "{", "}");
             Field[] fields = obj.getClass().getDeclaredFields();
             for (Field field : fields) {
-                field.setAccessible(true); // Permet de lire les attributs privés
+                field.setAccessible(true);
                 String key = "\"" + field.getName() + "\"";
                 String value = toJsonNative(field.get(obj));
                 joiner.add(key + ":" + value);
             }
             return joiner.toString();
         } catch (Exception e) {
-            return "{}"; // Repli en cas d'erreur de lecture
+            return "{}";
         }
     }
-
-
 
     private Method findMethod(Class<?> clazz, String name) throws NoSuchMethodException {
         for (Method candidate : clazz.getDeclaredMethods()) {
@@ -915,16 +976,14 @@ public class FrontController extends HttpServlet {
 
     @Override
     public void init() throws ServletException {
-        // String basePackages = this.getInitParameter("base-package");
         ServletContext context = getServletContext();
         try {
-            // controllers = Utils.findClassesMethodByAnnotation(Controller.class,
-            // urlMappingmethod,
-            // basePackages.split(","));
-
             urlMappingmethod = (HashMap<UrlMethod, Mapping>) context.getAttribute("urlMappingMethod");
             controllers = (List<Class<?>>) context.getAttribute("controllers");
-
+            String uploadDir = getInitParameter("upload-directory");
+            if (uploadDir != null) {
+                context.setAttribute("uploadDirectory", uploadDir);
+            }
         } catch (Exception e) {
             throw new ServletException(e);
         }
@@ -933,15 +992,12 @@ public class FrontController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
-
         handle(request, response);
     }
 
     @Override
-
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
-
         handle(request, response);
     }
 
@@ -954,40 +1010,78 @@ public class FrontController extends HttpServlet {
         String httpMethod = request.getMethod();
         UrlMethod requestKey = new UrlMethod(pathInfo, httpMethod);
 
-        if (urlMappingmethod.containsKey(requestKey)) { // Utilise automatiquement le hashCode et equals de UrlMethod
+        if (urlMappingmethod.containsKey(requestKey)) {
             Mapping m = urlMappingmethod.get(requestKey);
 
             try {
                 Class<?> clazz = Class.forName(m.getClassName());
                 Object controllerInstance = clazz.getDeclaredConstructor().newInstance();
-                // Sprint 7 : la méthode peut avoir des paramètres, on la retrouve par son nom
-                Method method = findMethod(clazz, m.getMethod());
+                Method method = findMethod(clazz, m.getMethod());// --- SPRINT 10 & 10 BIS : VÉRIFICATION DE L'AUTHENTIFICATION ET DES RÔLES ---
+                Auth auth = method.getAnnotation(Auth.class);
+                if (auth == null && clazz.isAnnotationPresent(Auth.class)) {
+                    auth = clazz.getAnnotation(Auth.class);
+                }
 
-                // Invocation de la méthode du contrôleur
-                // method.invoke(controllerInstance);
+                if (auth != null) {
+                    jakarta.servlet.http.HttpSession httpSession = request.getSession();
+                    String sessionKey = auth.key();
+                    Object sessionValue = httpSession.getAttribute(sessionKey);
 
-                // Sprint 7 : formulaire -> framework -> paramètres de la méthode
+                    // 1. Sprint 10 : Vérification si l'utilisateur est connecté
+                    if (sessionValue == null) {
+                        throw new RuntimeException("Accès refusé : Vous devez être authentifié (connecté) pour accéder à cette ressource.");
+                    }
+
+                    // 2. Sprint 10 Bis : Vérification des rôles spécifiques
+                    String[] requiredRoles = auth.value();
+                    if (requiredRoles.length > 0) {
+                        boolean authorized = false;
+                        String userRole = sessionValue.toString(); 
+
+                        for (String role : requiredRoles) {
+                            if (role.trim().equalsIgnoreCase(userRole.trim())) {
+                                authorized = true;
+                                break;
+                            }
+                        }
+
+                        if (!authorized) {
+                            throw new RuntimeException("Accès interdit : Vous n'avez pas le rôle requis pour exécuter cette méthode.");
+                        }
+                    }
+                }
+
+
+
+                // 1. Construction des arguments (le ParamBinder injecte MySession initialisé avec la HttpSession)
                 Object[] args = ParamBinder.buildArgs(method, request);
+
                 Object returnValue = method.invoke(controllerInstance, args);
+
+                for (Object arg : args) {
+                    if (arg instanceof MySession) {
+                        ((MySession) arg).updateHttpSession();
+                    }
+                }
+
                 if (method.isAnnotationPresent(WebApi.class)) {
                     response.setContentType("application/json; charset=UTF-8");
                     PrintWriter out = response.getWriter();
 
                     if (returnValue != null) {
-                        // Si la méthode renvoie un ModelView, on extrait ses données
                         if (returnValue instanceof ModelView) {
                             ModelView mv = (ModelView) returnValue;
                             out.print(toJsonNative(mv.getData()));
                         } else {
                             out.print(toJsonNative(returnValue));
                         }
-
                     } else {
                         out.print("{}");
                     }
                     out.flush();
                     return;
                 }
+
                 if (returnValue instanceof ModelView) {
                     ModelView mv = (ModelView) returnValue;
 
@@ -1000,6 +1094,7 @@ public class FrontController extends HttpServlet {
                     dispatcher.forward(request, response);
                     return;
                 }
+
                 response.setContentType("text/html; charset=UTF-8");
                 PrintWriter out = response.getWriter();
                 out.println("<!DOCTYPE html>");
@@ -1017,18 +1112,10 @@ public class FrontController extends HttpServlet {
                 }
 
                 out.println("</ul>");
-
                 out.println("<p>Vous avez demandé : " + request.getRequestURI() + "</p>");
-
-
                 out.println("<h2>Scan des méthodes terminé !</h2>");
                 out.println("<p>URL demandée : <strong>" + pathInfo + "</strong></p>");
-
-                // Vérification si l'URL existe dans notre urlMapping
                 out.println("<h2>Vérification du Mapping :</h2>");
-
-                out.println("<h2>Vérification du Mapping :</h2>");
-
                 out.println("<p style='color: green;'><strong>Match trouvé et exécuté avec succès !</strong></p>");
                 out.println("<ul>");
                 out.println("<li>Contrôleur : " + m.getClassName() + "</li>");
@@ -1036,18 +1123,17 @@ public class FrontController extends HttpServlet {
                 out.println("</ul>");
                 out.println("</body>");
                 out.println("</html>");
+
             } catch (Exception e) {
                 response.setContentType("text/html; charset=UTF-8");
-                 PrintWriter out = response.getWriter();
-                // invoke() enveloppe les exceptions du contrôleur dans InvocationTargetException
+                PrintWriter out = response.getWriter();
                 Throwable cause = (e instanceof InvocationTargetException && e.getCause() != null) ? e.getCause() : e;
                 out.println("<p style='color: red;'>Erreur lors de l'exécution : " + cause.getMessage() + "</p>");
                 cause.printStackTrace(out);
             }
-        }  else {
-            // Affichage de la page de débogage uniquement si aucune route ne matche
+        } else {
             response.setContentType("text/html; charset=UTF-8");
-             PrintWriter out = response.getWriter();
+            PrintWriter out = response.getWriter();
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head><title>spring0 - Débogage</title></head>");
@@ -1055,9 +1141,7 @@ public class FrontController extends HttpServlet {
             out.println("<h1>Bonjour depuis spring0 & 1 !</h1>");
             out.println("<p>Méthode HTTP : <strong>" + httpMethod + "</strong></p>");
             out.println("<p>Path demandé : <strong>" + pathInfo + "</strong></p>");
-            
             out.println("<p style='color: red;'>Aucune méthode associée à l'URL " + pathInfo + " avec la méthode " + httpMethod + "</p>");
-
             out.println("<h2>Contrôleurs détectés</h2><ul>");
             if (controllers != null) {
                 for (Class<?> controller : controllers) {
@@ -1065,7 +1149,6 @@ public class FrontController extends HttpServlet {
                 }
             }
             out.println("</ul>");
-
             out.println("<h2>Contenu complet de la HashMap (urlMapping)</h2>");
             out.println("<table border='1' cellpadding='5'>");
             out.println("<tr><th>Clé (UrlMethod)</th><th>Classe associée</th><th>Méthode associée</th></tr>");
@@ -1230,6 +1313,66 @@ public class ModelView {
 }
 
 ==================================================
+FICHIER : ./spring0/src/framework/util/MySession.java
+==================================================
+package framework.util;
+
+import jakarta.servlet.http.HttpSession;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
+
+public class MySession {
+    private HttpSession httpSession;
+    private Map<String, Object> sessionMap = new HashMap<>();
+
+    public MySession(HttpSession httpSession) {
+        this.httpSession = httpSession;
+        if (httpSession != null) {
+            Enumeration<String> attributeNames = httpSession.getAttributeNames();
+            while (attributeNames.hasMoreElements()) {
+                String key = attributeNames.nextElement();
+                sessionMap.put(key, httpSession.getAttribute(key));
+            }
+        }
+    }
+
+    public Object get(String key) {
+        return sessionMap.get(key);
+    }
+
+    public void set(String key, Object value) {
+        sessionMap.put(key, value);
+    }
+
+    public void remove(String key) {
+        sessionMap.remove(key);
+    }
+
+    public Map<String, Object> getData() {
+        return sessionMap;
+    }
+
+    // Fomba fiasa handefasana sy hanavaozana ny HttpSession tena izy rehefa vita ny invoke
+    public void updateHttpSession() {
+        if (httpSession != null) {
+         
+            Enumeration<String> attributeNames = httpSession.getAttributeNames();
+            while (attributeNames.hasMoreElements()) {
+                String key = attributeNames.nextElement();
+                if (!sessionMap.containsKey(key)) {
+                    httpSession.removeAttribute(key);
+                }
+            }
+        
+            for (Map.Entry<String, Object> entry : sessionMap.entrySet()) {
+                httpSession.setAttribute(entry.getKey(), entry.getValue());
+            }
+        }
+    }
+}
+
+==================================================
 FICHIER : ./spring0/src/framework/util/ParamBinder.java
 ==================================================
 package framework.util;
@@ -1265,7 +1408,12 @@ public class ParamBinder {
                 args[i] = request;
                 continue;
             }
-            // Dans ParamBinder.java, ajoutez la gestion du type FileUpload
+          
+            if (MySession.class.isAssignableFrom(type)) {
+                args[i] = new MySession(request.getSession());
+                continue;
+            }
+            
             if (type == FileUpload.class) {
                 args[i] = bindFile(request, name);
                 continue;
@@ -1443,9 +1591,22 @@ public class ParamBinder {
 
     String fileName = extractFileName(filePart);
     byte[] bytes = filePart.getInputStream().readAllBytes();
+    long size = filePart.getSize();
+
+    String uploadDir = (String) request.getServletContext().getAttribute("uploadDirectory");
     
-    // Optionnel : Sauvegarder temporairement sur le disque ou garder en mémoire
-    return new FileUpload(fileName, null, bytes, filePart.getSize());
+    String savedPath = null;
+    if (uploadDir != null) {
+      
+        java.io.File dir = new java.io.File(uploadDir);
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+        savedPath = uploadDir + java.io.File.separator + fileName;
+        java.nio.file.Files.write(java.nio.file.Paths.get(savedPath), bytes);
+    }
+    return new FileUpload(fileName, savedPath, bytes, size);
+
 }
 
     private static String extractFileName(jakarta.servlet.http.Part part) {

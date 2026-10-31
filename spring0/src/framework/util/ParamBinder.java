@@ -31,7 +31,12 @@ public class ParamBinder {
                 args[i] = request;
                 continue;
             }
-            // Dans ParamBinder.java, ajoutez la gestion du type FileUpload
+          
+            if (MySession.class.isAssignableFrom(type)) {
+                args[i] = new MySession(request.getSession());
+                continue;
+            }
+            
             if (type == FileUpload.class) {
                 args[i] = bindFile(request, name);
                 continue;

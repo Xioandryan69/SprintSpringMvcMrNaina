@@ -1,12 +1,15 @@
 {
     "java.project.sourcePaths": [
         "spring0/src",
-        "app-test/src"
+        "app-test/src",
+        "springboot/src/main/java"
     ],
     "java.project.outputPath": ".vscode/out",
     "java.project.referencedLibraries": [
+        "spring0/lib/servlet-api.jar",
         "spring0/lib/**/*.jar",
         "app-test/lib/**/*.jar",
-        "app-test/WEB-INF/lib/**/*.jar"
+        "app-test/WEB-INF/lib/**/*.jar",
+        "springboot/target/dependency/**/*.jar"
     ]
 }

@@ -1,8 +1,9 @@
 {
-    "java.project.referencedLibraries": [
-        "lib/tomcat-servlet-api.jar"
-    ],
-        "java.project.sourcePaths": [
+    "java.project.sourcePaths": [
         "src"
+    ],
+    "java.project.referencedLibraries": [
+        "lib/servlet-api.jar",
+        "lib/**/*.jar"
     ]
 }
