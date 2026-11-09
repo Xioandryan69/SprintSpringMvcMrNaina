@@ -6,7 +6,6 @@ import framework.annotation.WebApi;
 import framework.util.FileUpload;
 import framework.util.ModelView;
 import framework.annotation.Auth;
-
 import framework.annotation.UrlMapping;
 import framework.util.MySession;
 import java.util.List;
@@ -143,6 +142,7 @@ public class TestController {
     @Get("/session-remove")
     public ModelView removeSessionData(MySession session) {
         session.remove("userConnected");
+        if(session.get("userRole")!=null)session.remove("userRole");
         
         ModelView mv = new ModelView("employe-result.jsp");
         mv.addItem("message", "Voafafa ny session!");
